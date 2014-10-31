@@ -1,11 +1,14 @@
 import config
 import util
 
+
 def unknown(message):
     util.log('XX {}'.format(message))
 
+
 def known(message):
     util.log('<= {}'.format(message))
+
 
 def command(message):
     message = message.split(' :')[1]
@@ -21,12 +24,14 @@ def command(message):
 ERR_NOTREGISTERED = known
 JOIN = known
 
+
 def MODE(message):
     util.log('<= {}'.format(message))
     tokens = message.split()
     target = tokens[2]
     if target == config.CHANNEL:
         modes = tokens[3]
+
 
 def NICK(message):
     util.log('<= {}'.format(message))
@@ -40,10 +45,12 @@ def NICK(message):
 
 NOTICE = known
 
+
 def PING(message):
     util.log('<= {}'.format(message))
     tokens = message.split()
     return ['PONG {}'.format(tokens[1])]
+
 
 def PRIVMSG(message):
     util.log('<= {}'.format(message))
@@ -54,6 +61,7 @@ def PRIVMSG(message):
         if nick in config.ADMINS:
             return command(message)
 
+
 def QUIT(message):
     util.log('<= {}'.format(message))
     tokens = message.split()
@@ -63,6 +71,7 @@ def QUIT(message):
         util.remove_admin(nick)
 
 RPL_CREATED = known
+
 
 def RPL_ENDOFMOTD(message):
     util.log('<= {}'.format(message))
@@ -80,6 +89,7 @@ RPL_LUSERUNKNOWN = known
 RPL_MOTD = known
 RPL_MOTDSTART = known
 RPL_MYINFO = known
+
 
 def RPL_NAMREPLY(message):
     util.log('<= {}'.format(message))

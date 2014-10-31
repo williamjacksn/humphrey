@@ -3,6 +3,7 @@ import config
 import handlers
 import util
 
+
 class IRCClient(asyncio.Protocol):
     buf = b''
 
@@ -27,7 +28,8 @@ class IRCClient(asyncio.Protocol):
         self.loop.stop()
 
     def _in(self, message):
-        # convert message from bytes to unicode then send to appropriate handler
+        # convert message from bytes to unicode
+        # then send to appropriate handler
         message = util.smart_decode(message)
         tokens = message.split()
         if len(tokens) > 1 and tokens[1] == 'JOIN':
@@ -88,7 +90,8 @@ class IRCClient(asyncio.Protocol):
             self._out(handlers.unknown(message))
 
     def _out(self, messages):
-        # log messages then convert from unicode to bytes and write to transport
+        # log messages then convert from unicode to bytes
+        # and write to transport
         if messages:
             for message in messages:
                 util.log('=> {}'.format(message))
