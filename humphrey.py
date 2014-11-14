@@ -59,19 +59,19 @@ class IRCClient(asyncio.Protocol):
 
     def add_admin(self, nick):
         self.log('** Added {} to admins list'.format(nick))
-        c.ADMINS.add(nick)
+        self.c.ADMINS.add(nick)
 
     def remove_admin(self, nick):
         self.log('** Removed {} from admins list'.format(nick))
-        c.ADMINS.discard(nick)
+        self.c.ADMINS.discard(nick)
 
     def connection_made(self, transport):
         self.loop = asyncio.get_event_loop()
         self.t = transport
         self.log('** Connection made')
-        self.out(['NICK {}'.format(c.NICK)])
+        self.out(['NICK {}'.format(self.c.NICK)])
         m = 'USER {} {} x :{}'
-        self.out([m.format(c.IDENT, c.HOST, c.REALNAME)])
+        self.out([m.format(self.c.IDENT, self.c.HOST, self.c.REALNAME)])
 
     def data_received(self, data):
         self.buf = self.buf + data
