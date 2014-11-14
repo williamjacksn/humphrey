@@ -18,7 +18,7 @@ def command(message):
 def PRIVMSG(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
-    if tokens[2] == bot.c.NICK:
+    if len(tokens) > 2 and tokens[2] == bot.c.NICK:
         source = tokens[0].lstrip(':')
         nick, _, _ = bot.parse_hostmask(source)
         if nick in bot.c.ADMINS:
@@ -98,8 +98,10 @@ def RPL_ENDOFMOTD(message):
 @bot.ee.on('372')  # RPL_MOTD
 @bot.ee.on('375')  # RPL_MOTDSTART
 @bot.ee.on('451')  # ERR_NOTREGISTERED
+@bot.ee.on('ACTION')
 @bot.ee.on('JOIN')
 @bot.ee.on('NOTICE')
+@bot.ee.on('TOPIC')
 def known(message):
     bot.log('<= {}'.format(message))
 
