@@ -1,19 +1,77 @@
 import asyncio
+import collections
 import config
-import handlers
-import util
+import datetime
+
+
+class EventEmitter(object):
+    def __init__(self):
+        self._events = collections.defaultdict(list)
+
+    def on(self, event, f=None):
+        def _on(f):
+            self._events[event].append(f)
+            return f
+        if f is None:
+            return _on
+        return _on(f)
+
+    def emit(self, event, *args, **kwargs):
+        handled = False
+        for f in self._events[event]:
+            f(*args, **kwargs)
+            handled = True
+        if not handled:
+            for f in self._events['catch_all']:
+                f(*args, **kwargs)
+        return handled
 
 
 class IRCClient(asyncio.Protocol):
+    c = config.Config()
     buf = b''
+    ee = EventEmitter()
+
+    def this(self):
+        return self
+
+    def log(self, message):
+        t = datetime.datetime.utcnow()
+        print('{} {}'.format(t, message))
+
+    def smart_decode(self, message):
+        try:
+            return message.decode()
+        except UnicodeDecodeError:
+            pass
+        try:
+            return message.decode('iso-8859-1')
+        except:
+            for b in message:
+                self.log('{} {}'.format(chr(b), b))
+            raise
+
+    def parse_hostmask(self, hostmask):
+        # 'nick!user@host' => ('nick', 'user', 'host')
+        nick, _, userhost = hostmask.partition('!')
+        user, _, host = userhost.partition('@')
+        return nick, user, host
+
+    def add_admin(self, nick):
+        self.log('** Added {} to admins list'.format(nick))
+        c.ADMINS.add(nick)
+
+    def remove_admin(self, nick):
+        self.log('** Removed {} from admins list'.format(nick))
+        c.ADMINS.discard(nick)
 
     def connection_made(self, transport):
         self.loop = asyncio.get_event_loop()
         self.t = transport
-        util.log('** Connection made')
-        self._out(['NICK {}'.format(config.NICK)])
+        self.log('** Connection made')
+        self.out(['NICK {}'.format(c.NICK)])
         m = 'USER {} {} x :{}'
-        self._out([m.format(config.IDENT, config.HOST, config.REALNAME)])
+        self.out([m.format(c.IDENT, c.HOST, c.REALNAME)])
 
     def data_received(self, data):
         self.buf = self.buf + data
@@ -24,85 +82,25 @@ class IRCClient(asyncio.Protocol):
             self.loop.call_soon(self._in, line)
 
     def connection_lost(self, exc):
-        util.log('** Connection lost')
+        self.log('** Connection lost')
         self.loop.stop()
 
     def _in(self, message):
         # convert message from bytes to unicode
-        # then send to appropriate handler
-        message = util.smart_decode(message)
+        # then emit an appropriate event
+        message = self.smart_decode(message)
         tokens = message.split()
-        if len(tokens) > 1 and tokens[1] == 'JOIN':
-            self._out(handlers.JOIN(message))
-        elif len(tokens) > 1 and tokens[1] == 'MODE':
-            self._out(handlers.MODE(message))
-        elif len(tokens) > 1 and tokens[1] == 'NICK':
-            self._out(handlers.NICK(message))
-        elif len(tokens) > 1 and tokens[1] == 'NOTICE':
-            self._out(handlers.NOTICE(message))
-        elif len(tokens) > 0 and tokens[0] == 'PING':
-            self._out(handlers.PING(message))
-        elif len(tokens) > 1 and tokens[1] == 'PRIVMSG':
-            self._out(handlers.PRIVMSG(message))
-        elif len(tokens) > 1 and tokens[1] == 'QUIT':
-            self._out(handlers.QUIT(message))
-        elif len(tokens) > 1 and tokens[1] == '001':
-            self._out(handlers.RPL_WELCOME(message))
-        elif len(tokens) > 1 and tokens[1] == '002':
-            self._out(handlers.RPL_YOURHOST(message))
-        elif len(tokens) > 1 and tokens[1] == '003':
-            self._out(handlers.RPL_CREATED(message))
-        elif len(tokens) > 1 and tokens[1] == '004':
-            self._out(handlers.RPL_MYINFO(message))
-        elif len(tokens) > 1 and tokens[1] == '005':
-            self._out(handlers.RPL_ISUPPORT(message))
-        elif len(tokens) > 1 and tokens[1] == '251':
-            self._out(handlers.RPL_LUSERCLIENT(message))
-        elif len(tokens) > 1 and tokens[1] == '252':
-            self._out(handlers.RPL_LUSEROP(message))
-        elif len(tokens) > 1 and tokens[1] == '253':
-            self._out(handlers.RPL_LUSERUNKNOWN(message))
-        elif len(tokens) > 1 and tokens[1] == '254':
-            self._out(handlers.RPL_LUSERCHANNELS(message))
-        elif len(tokens) > 1 and tokens[1] == '255':
-            self._out(handlers.RPL_LUSERME(message))
-        elif len(tokens) > 1 and tokens[1] == '265':
-            self._out(handlers.RPL_LOCALUSERS(message))
-        elif len(tokens) > 1 and tokens[1] == '266':
-            self._out(handlers.RPL_GLOBALUSERS(message))
-        elif len(tokens) > 1 and tokens[1] == '332':
-            self._out(handlers.RPL_TOPIC(message))
-        elif len(tokens) > 1 and tokens[1] == '333':
-            self._out(handlers.RPL_TOPICWHOTIME(message))
-        elif len(tokens) > 1 and tokens[1] == '353':
-            self._out(handlers.RPL_NAMREPLY(message))
-        elif len(tokens) > 1 and tokens[1] == '366':
-            self._out(handlers.RPL_ENDOFNAMES(message))
-        elif len(tokens) > 1 and tokens[1] == '372':
-            self._out(handlers.RPL_MOTD(message))
-        elif len(tokens) > 1 and tokens[1] == '375':
-            self._out(handlers.RPL_MOTDSTART(message))
-        elif len(tokens) > 1 and tokens[1] == '376':
-            self._out(handlers.RPL_ENDOFMOTD(message))
-        elif len(tokens) > 1 and tokens[1] == '451':
-            self._out(handlers.RPL_ENDOFMOTD(message))
+        if len(tokens) > 0 and tokens[0] == 'PING':
+            self.ee.emit(tokens[0], message)
+        elif len(tokens) > 1:
+            self.ee.emit(tokens[1], message)
         else:
-            self._out(handlers.unknown(message))
+            self.ee.emit('catch_all', message)
 
-    def _out(self, messages):
+    def out(self, messages):
         # log messages then convert from unicode to bytes
         # and write to transport
         if messages:
             for message in messages:
-                util.log('=> {}'.format(message))
+                self.log('=> {}'.format(message))
                 self.t.write('{}\r\n'.format(message).encode())
-
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    coro = loop.create_connection(IRCClient, config.HOST, config.PORT)
-    loop.run_until_complete(coro)
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        loop.close()
