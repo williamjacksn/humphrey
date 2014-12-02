@@ -32,10 +32,15 @@ class IRCClient(asyncio.Protocol):
     buf = b''
     ee = EventEmitter()
 
+    def __init__(self):
+        self.loop = asyncio.get_event_loop()
+        self.t = None
+
     def this(self):
         return self
 
-    def log(self, message):
+    @staticmethod
+    def log(message):
         t = datetime.datetime.utcnow()
         print('{} {}'.format(t, message))
 
@@ -51,7 +56,8 @@ class IRCClient(asyncio.Protocol):
                 self.log('{} {}'.format(chr(b), b))
             raise
 
-    def parse_hostmask(self, hostmask):
+    @staticmethod
+    def parse_hostmask(hostmask):
         # 'nick!user@host' => ('nick', 'user', 'host')
         nick, _, userhost = hostmask.partition('!')
         user, _, host = userhost.partition('@')
@@ -66,7 +72,6 @@ class IRCClient(asyncio.Protocol):
         self.c.ADMINS.discard(nick)
 
     def connection_made(self, transport):
-        self.loop = asyncio.get_event_loop()
         self.t = transport
         self.log('** Connection made')
         self.out(['NICK {}'.format(self.c.NICK)])
