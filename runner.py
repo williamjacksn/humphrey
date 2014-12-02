@@ -15,7 +15,7 @@ def command(message):
 
 
 @bot.ee.on('PRIVMSG')
-def PRIVMSG(message):
+def privmsg(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
     if len(tokens) > 2 and tokens[2] == bot.c.NICK:
@@ -26,7 +26,7 @@ def PRIVMSG(message):
 
 
 @bot.ee.on('MODE')
-def MODE(message):
+def on_mode(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
     target = tokens[2]
@@ -35,7 +35,7 @@ def MODE(message):
 
 
 @bot.ee.on('NICK')
-def NICK(message):
+def on_nick(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
     source = tokens[0].lstrip(':')
@@ -47,14 +47,14 @@ def NICK(message):
 
 
 @bot.ee.on('PING')
-def PING(message):
+def on_ping(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
     bot.out(['PONG {}'.format(tokens[1])])
 
 
 @bot.ee.on('QUIT')
-def QUIT(message):
+def on_quit(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
     source = tokens[0].lstrip(':')
@@ -64,10 +64,9 @@ def QUIT(message):
 
 
 @bot.ee.on('353')
-def RPL_NAMREPLY(message):
+def on_rpl_namreply(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
-    names = tokens[5:]
     for name in tokens[5:]:
         name = name.lstrip(':')
         if name.startswith(('~', '@', '%')):
@@ -75,7 +74,7 @@ def RPL_NAMREPLY(message):
 
 
 @bot.ee.on('376')
-def RPL_ENDOFMOTD(message):
+def on_rpl_endofmotd(message):
     bot.log('<= {}'.format(message))
     bot.out(['JOIN {}'.format(bot.c.CHANNEL)])
 
@@ -118,4 +117,5 @@ if __name__ == '__main__':
     try:
         loop.run_forever()
     except KeyboardInterrupt:
+        bot.log('** Caught KeyboardInterrupt')
         loop.close()
