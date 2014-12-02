@@ -36,7 +36,7 @@ class IRCClient(asyncio.Protocol):
         self.loop = asyncio.get_event_loop()
         self.t = None
 
-    def this(self):
+    def __call__(self):
         return self
 
     @staticmethod
@@ -53,7 +53,7 @@ class IRCClient(asyncio.Protocol):
             return message.decode('iso-8859-1')
         except:
             for b in message:
-                self.log('{} {}'.format(chr(b), b))
+                self.log('{} {}'.format(hex(b), chr(b)))
             raise
 
     @staticmethod
