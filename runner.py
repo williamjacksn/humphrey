@@ -1,28 +1,70 @@
 import asyncio
 import humphrey
+import importlib
+import inspect
+import sys
 
 
 bot = humphrey.IRCClient()
 
 
-def command(message):
-    message = message.split(' :')[1]
-    tokens = message.split()
-    if len(tokens) > 1 and tokens[0] == '!say':
-        bot.log('** Processing command: {}'.format(message))
-        response = ' '.join(tokens[1:])
-        bot.out(['PRIVMSG {} :{}'.format(bot.c.CHANNEL, response)])
+@bot.ee.on('PRIVMSG')
+def log_privmsg(message):
+    bot.log('<= {}'.format(message))
 
 
 @bot.ee.on('PRIVMSG')
-def privmsg(message):
-    bot.log('<= {}'.format(message))
+def handle_load(message):
     tokens = message.split()
-    if len(tokens) > 2 and tokens[2] == bot.c.NICK:
-        source = tokens[0].lstrip(':')
-        nick, _, _ = bot.parse_hostmask(source)
-        if nick in bot.c.ADMINS:
-            command(message)
+    source = tokens[0].lstrip(':')
+    source_nick, _, _ = bot.parse_hostmask(source)
+    if len(tokens) > 3 and tokens[3] == ':!load':
+        bot.log('** Handling !load')
+        if len(tokens) < 5:
+            m = 'Please specify a plugin to load.'
+            bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+            return
+        plug_name = tokens[4]
+        module_name = 'plugins.{}'.format(plug_name)
+        if module_name in sys.modules:
+            module = importlib.reload(module_name)
+        else:
+            try:
+                module = importlib.import_module(module_name)
+            except ImportError:
+                m = 'Error while loading plugin: {}'.format(plug_name)
+                bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+                return
+        for plug_handler in inspect.getmembers(module, inspect.isclass):
+            cls = plug_handler[1]
+            for cmd in cls.cmds:
+                bot.c.PLUG_COMMANDS[cmd] = cls.handle
+                m = 'Loaded a command: {}'.format(cmd)
+                bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+
+
+@bot.ee.on('PRIVMSG')
+def dispatch_plugin_command(message):
+    tokens = message.split()
+    source = tokens[0].lstrip(':')
+    source_nick, _, _ = bot.parse_hostmask(source)
+    command = tokens[3].lstrip(':')
+    if command in bot.c.PLUG_COMMANDS:
+        handler = bot.c.PLUG_COMMANDS.get(command)
+        try:
+            text = message.split(' :')[1]
+            tt = text.split()
+            public, private = handler(source_nick, tokens[2], tt, bot.c)
+        except Exception as exc:
+            m = 'Exception in {}'.format(command)
+            bot.log('** {}'.format(m))
+            bot.log(exc)
+            bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+            return
+        for m in public:
+            bot.out(['PRIVMSG {} :{}'.format(bot.c.CHANNEL, m)])
+        for m in private:
+            bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
 
 
 @bot.ee.on('MODE')
@@ -40,9 +82,9 @@ def on_nick(message):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     nick, _, _ = bot.parse_hostmask(source)
-    newnick = tokens[2].lstrip(':')
+    new_nick = tokens[2].lstrip(':')
     if nick in bot.c.ADMINS:
-        bot.add_admin(newnick)
+        bot.add_admin(new_nick)
         bot.remove_admin(nick)
 
 
@@ -112,7 +154,7 @@ def unknown(message):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    coro = loop.create_connection(bot.this, bot.c.HOST, bot.c.PORT)
+    coro = loop.create_connection(bot, bot.c.HOST, bot.c.PORT)
     loop.run_until_complete(coro)
     try:
         loop.run_forever()

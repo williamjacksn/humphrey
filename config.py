@@ -6,3 +6,4 @@ class Config(object):
     REALNAME = 'Humphrey'
     CHANNEL = '#humphrey'
     ADMINS = set()
+    PLUG_COMMANDS = dict()
