@@ -44,10 +44,8 @@ class IRCClient(asyncio.Protocol):
         t = datetime.datetime.utcnow()
         print('{} {}'.format(t, message))
 
-    def smart_decode(self, m):
-        self.log('** {}'.format(repr(m)))
-
-        # get rid of format codes
+    @staticmethod
+    def remove_format_codes(m):
         m = m.replace(b'\x02', b'')  # bold
         m = m.replace(b'\x1f', b'')  # underline
         while 3 in m:  # color
@@ -57,13 +55,17 @@ class IRCClient(asyncio.Protocol):
                 mark += 2
             elif m[mark:mark + 1].isdigit():
                 mark += 1
-            if len(m) > mark and m[mark] == b',':
+            if len(m) > mark and m[mark] == 44:  # b','
                 if m[mark + 1:mark + 3].isdigit():
                     mark += 3
                 elif m[mark + 1:mark + 2].isdigit():
                     mark += 2
             m = m.replace(m[idx:mark], b'')
+        return m
 
+    def smart_decode(self, m):
+        self.log('** {}'.format(repr(m)))
+        m = self.remove_format_codes(m)
         try:
             return m.decode()
         except UnicodeDecodeError:
