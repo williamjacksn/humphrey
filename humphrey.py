@@ -44,15 +44,36 @@ class IRCClient(asyncio.Protocol):
         t = datetime.datetime.utcnow()
         print('{} {}'.format(t, message))
 
-    def smart_decode(self, message):
+    def smart_decode(self, m):
+        self.log('** {}'.format(repr(m)))
+
+        # get rid of format codes
+        m = m.replace(b'\x02', b'')  # bold
+        m = m.replace(b'\x1f', b'')  # underline
+        while 3 in m:  # color
+            idx = m.find(3)
+            mark = idx + 1
+            if m[mark:mark + 2].isdigit():
+                mark += 2
+            elif m[mark:mark + 1].isdigit():
+                mark += 1
+            if len(m) > mark and m[mark] == b',':
+                if m[mark + 1:mark + 3].isdigit():
+                    mark += 3
+                elif m[mark + 1:mark + 2].isdigit():
+                    mark += 2
+            m = m.replace(m[idx:mark], b'')
+
         try:
-            return message.decode()
+            return m.decode()
         except UnicodeDecodeError:
+            self.log('** Failed decode using utf-8, trying next encoding.')
             pass
         try:
-            return message.decode('iso-8859-1')
+            return m.decode('iso-8859-1')
         except:
-            for b in message:
+            self.log('** Failed decode using iso-8859-1.')
+            for b in m:
                 self.log('{} {}'.format(hex(b), chr(b)))
             raise
 
