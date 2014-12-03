@@ -47,6 +47,8 @@ class IRCClient(asyncio.Protocol):
     @staticmethod
     def remove_format_codes(m):
         m = m.replace(b'\x02', b'')  # bold
+        m = m.replace(b'\x0f', b'')  # normal
+        m = m.replace(b'\x16', b'')  # italic/reversed
         m = m.replace(b'\x1f', b'')  # underline
         while 3 in m:  # color
             idx = m.find(3)
