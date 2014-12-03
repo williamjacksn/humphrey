@@ -35,6 +35,7 @@ class IRCClient(asyncio.Protocol):
     def __init__(self):
         self.loop = asyncio.get_event_loop()
         self.t = None
+        self.debug = False
 
     def __call__(self):
         return self
@@ -66,13 +67,13 @@ class IRCClient(asyncio.Protocol):
         return m
 
     def smart_decode(self, m):
-        self.log('** {}'.format(repr(m)))
+        if self.debug:
+            self.log('** {}'.format(repr(m)))
         m = self.remove_format_codes(m)
         try:
             return m.decode()
         except UnicodeDecodeError:
             self.log('** Failed decode using utf-8, trying next encoding.')
-            pass
         try:
             return m.decode('iso-8859-1')
         except:
