@@ -111,6 +111,16 @@ def on_nick(message):
         bot.remove_admin(nick)
 
 
+@bot.ee.on('PART')
+def on_part(message):
+    bot.log('<= {}'.format(message))
+    tokens = message.split()
+    source = tokens[0].lstrip(':')
+    nick, _, _ = bot.parse_hostmask(source)
+    if nick in bot.c.ADMINS:
+        bot.remove_admin(nick)
+
+
 @bot.ee.on('PING')
 def on_ping(message):
     bot.log('<= {}'.format(message))
