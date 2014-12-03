@@ -22,7 +22,7 @@ def handle_load(message):
         bot.log('** Handling !load')
         if len(tokens) < 5:
             m = 'Please specify a plugin to load.'
-            bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+            bot.send_privmsg(source_nick, m)
             return
         plug_name = tokens[4]
         module_name = 'plugins.{}'.format(plug_name)
@@ -33,14 +33,14 @@ def handle_load(message):
                 module = importlib.import_module(module_name)
             except ImportError:
                 m = 'Error while loading plugin: {}'.format(plug_name)
-                bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+                bot.send_privmsg(source_nick, m)
                 return
         for plug_handler in inspect.getmembers(module, inspect.isclass):
             cls = plug_handler[1]
             for cmd in cls.cmds:
                 bot.c.PLUG_COMMANDS[cmd] = cls.handle
                 m = 'Loaded a command: {}'.format(cmd)
-                bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+                bot.send_privmsg(source_nick, m)
 
 
 @bot.ee.on('PRIVMSG')
@@ -59,12 +59,12 @@ def dispatch_plugin_command(message):
             m = 'Exception in {}'.format(command)
             bot.log('** {}'.format(m))
             bot.log(exc)
-            bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+            bot.send_privmsg(source_nick, m)
             return
         for m in public:
-            bot.out(['PRIVMSG {} :{}'.format(bot.c.CHANNEL, m)])
+            bot.send_privmsg(bot.c.CHANNEL, m)
         for m in private:
-            bot.out(['PRIVMSG {} :{}'.format(source_nick, m)])
+            bot.send_privmsg(source_nick, m)
 
 
 @bot.ee.on('MODE')
@@ -92,7 +92,7 @@ def on_nick(message):
 def on_ping(message):
     bot.log('<= {}'.format(message))
     tokens = message.split()
-    bot.out(['PONG {}'.format(tokens[1])])
+    bot.out('PONG {}'.format(tokens[1]))
 
 
 @bot.ee.on('QUIT')
@@ -118,7 +118,7 @@ def on_rpl_namreply(message):
 @bot.ee.on('376')
 def on_rpl_endofmotd(message):
     bot.log('<= {}'.format(message))
-    bot.out(['JOIN {}'.format(bot.c.CHANNEL)])
+    bot.out('JOIN {}'.format(bot.c.CHANNEL))
 
 
 @bot.ee.on('001')  # RPL_WELCOME

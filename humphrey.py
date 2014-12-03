@@ -74,9 +74,9 @@ class IRCClient(asyncio.Protocol):
     def connection_made(self, transport):
         self.t = transport
         self.log('** Connection made')
-        self.out(['NICK {}'.format(self.c.NICK)])
+        self.out('NICK {}'.format(self.c.NICK))
         m = 'USER {} {} x :{}'
-        self.out([m.format(self.c.IDENT, self.c.HOST, self.c.REALNAME)])
+        self.out(m.format(self.c.IDENT, self.c.HOST, self.c.REALNAME))
 
     def data_received(self, data):
         self.buf = self.buf + data
@@ -104,10 +104,12 @@ class IRCClient(asyncio.Protocol):
         else:
             self.ee.emit('catch_all', message)
 
-    def out(self, messages):
+    def out(self, message):
         # log messages then convert from unicode to bytes
         # and write to transport
-        if messages:
-            for message in messages:
-                self.log('=> {}'.format(message))
-                self.t.write('{}\r\n'.format(message).encode())
+        if message:
+            self.log('=> {}'.format(message))
+            self.t.write('{}\r\n'.format(message).encode())
+
+    def send_privmsg(self, target, message):
+        self.out('PRIVMSG {} :{}'.format(target, message))
