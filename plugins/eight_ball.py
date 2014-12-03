@@ -9,6 +9,7 @@ def is_irc_channel(s):
 class EightBallHandler:
     cmds = ['!8ball']
     admin = False
+    help_text = ['Use \x02!8ball\x02 to ask a question of the magic 8ball.']
 
     RESPONSES = [
         'As I see it, yes.',

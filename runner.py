@@ -14,6 +14,27 @@ def log_privmsg(message):
 
 
 @bot.ee.on('PRIVMSG')
+def handle_help(message):
+    tokens = message.split()
+    source = tokens[0].lstrip(':')
+    source_nick, _, _ = bot.parse_hostmask(source)
+    if len(tokens) > 3 and tokens[3] == ':!help':
+        bot.log('** Handling !help')
+        if len(tokens) < 5:
+            m = 'Use \x02!help [<topic>]\x02 with one of these topics:'
+            m = '{} {}'.format(m, ', '.join(sorted(bot.c.HELP_TEXT.keys())))
+            bot.send_privmsg(source_nick, m)
+            return
+        topic = tokens[4]
+        if topic in bot.c.HELP_TEXT:
+            for line in bot.c.HELP_TEXT.get(topic):
+                bot.send_privmsg(source_nick, line)
+            return
+        m = 'I don\'t know anything about {}.'.format(topic)
+        bot.send_privmsg(source_nick, m)
+
+
+@bot.ee.on('PRIVMSG')
 def handle_load(message):
     tokens = message.split()
     source = tokens[0].lstrip(':')
@@ -39,6 +60,8 @@ def handle_load(message):
             cls = plug_handler[1]
             for cmd in cls.cmds:
                 bot.c.PLUG_COMMANDS[cmd] = cls.handle
+                topic = cmd.lstrip('!')
+                bot.c.HELP_TEXT[topic] = cls.help_text
                 m = 'Loaded a command: {}'.format(cmd)
                 bot.send_privmsg(source_nick, m)
 

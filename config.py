@@ -7,3 +7,5 @@ class Config(object):
     CHANNEL = '#humphrey'
     ADMINS = set()
     PLUG_COMMANDS = dict()
+    HELP_TEXT = dict()
+
