@@ -79,7 +79,7 @@ def handle_load(message, bot):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     source_nick, _, _ = bot.parse_hostmask(source)
-    if source_nick not in bot.c.admins:
+    if source_nick not in bot.admins:
         return
     if len(tokens) > 3 and tokens[3] == ':!load':
         bot.log('** Handling !load')
