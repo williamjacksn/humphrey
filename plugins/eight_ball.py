@@ -36,27 +36,23 @@ class EightBallHandler:
 
     @classmethod
     def handle(cls, sender, target, tokens, bot):
-        public = list()
-        private = list()
         response = random.choice(cls.RESPONSES)
 
         if not is_irc_channel(target):
-            private.append(response)
-            return public, private
+            bot.send_privmsg(sender, response)
+            return
 
         now = int(time.time())
         last = int(bot.c.get('8ball:last', 0))
         wait = int(bot.c.get('8ball:wait', 0))
         if last < now - wait:
-            public.append(response)
+            bot.send_privmsg(target, '{}: {}'.format(sender, response))
             if 'again' not in response:
                 bot.c['8ball:last'] = now
         else:
-            private.append(response)
+            bot.send_privmsg(sender, response)
             remaining = last + wait - now
             m = 'I am cooling down. You cannot use {}'.format(tokens[0])
             m = '{} in {} for another'.format(m, target)
             m = '{} {} seconds.'.format(m, remaining)
-            private.append(m)
-
-        return public, private
+            bot.send_privmsg(sender, m)

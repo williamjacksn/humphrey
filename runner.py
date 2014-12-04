@@ -9,7 +9,9 @@ config_file = pathlib.Path(__file__).resolve().with_name('config.json')
 gbot = humphrey.IRCClient(config_file)
 gbot.c.pretty = True
 gbot.plug_commands = dict()
+gbot.plug_commands_admin = dict()
 gbot.help_text = dict()
+gbot.help_text_admin = dict()
 
 
 def load_plugin(plug_name, bot):
@@ -28,10 +30,12 @@ def load_plugin(plug_name, bot):
     bot.c['plugins'] = list(plugins)
     for plug_handler in inspect.getmembers(module, inspect.isclass):
         cls = plug_handler[1]
+        cmd_dict = bot.plug_commands_admin if cls.admin else bot.plug_commands
+        help_dict = bot.help_text_admin if cls.admin else bot.help_text
         for cmd in cls.cmds:
-            bot.plug_commands[cmd] = cls.handle
+            cmd_dict[cmd] = cls.handle
             topic = cmd.lstrip('!')
-            bot.help_text[topic] = cls.help_text
+            help_dict[topic] = cls.help_text
             loaded_commands.append(cmd)
     return loaded_commands
 
@@ -62,12 +66,18 @@ def handle_help(message, bot):
         bot.log('** Handling !help')
         if len(tokens) < 5:
             m = 'Use \x02!help [<topic>]\x02 with one of these topics:'
-            m = '{} {}'.format(m, ', '.join(sorted(bot.help_text.keys())))
+            topics = list(bot.help_text.keys())
+            if source_nick in bot.admins:
+                topics += list(bot.help_text_admin.keys())
+            m = '{} {}'.format(m, ', '.join(sorted(topics)))
             bot.send_privmsg(source_nick, m)
             return
         topic = tokens[4]
-        if topic in bot.help_text:
-            for line in bot.help_text.get(topic):
+        lines = bot.help_text.get(topic)
+        if lines is None and source_nick in bot.admins:
+            lines = bot.help_text_admin.get(topic)
+        if lines is not None:
+            for line in lines:
                 bot.send_privmsg(source_nick, line)
             return
         m = 'I don\'t know anything about {}.'.format(topic)
@@ -104,22 +114,18 @@ def dispatch_plugin_command(message, bot):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     source_nick, _, _ = bot.parse_hostmask(source)
-    command = tokens[3].lstrip(':')
-    if command in bot.plug_commands:
-        handler = bot.plug_commands.get(command)
+    cmd = tokens[3].lstrip(':')
+    handler = bot.plug_commands.get(cmd)
+    if handler is None and source_nick in bot.admins:
+        handler = bot.plug_commands_admin.get(cmd)
+    if handler is not None:
         try:
             text = message.split(' :')[1]
-            tt = text.split()
-            public, private = handler(source_nick, tokens[2], tt, bot)
+            handler(source_nick, tokens[2], text.split(), bot)
         except Exception as exc:
-            m = 'Exception in {}'.format(command)
+            m = 'Exception in {}'.format(cmd)
             bot.log('** {}'.format(m))
             bot.log(exc)
-            bot.send_privmsg(source_nick, m)
-            return
-        for m in public:
-            bot.send_privmsg(bot.c.get('irc:channel'), m)
-        for m in private:
             bot.send_privmsg(source_nick, m)
 
 
