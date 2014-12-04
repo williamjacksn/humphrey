@@ -1,20 +1,20 @@
 import asyncio
 import collections
-import config
 import datetime
+import json
 
 
 class EventEmitter(object):
     def __init__(self):
         self._events = collections.defaultdict(list)
 
-    def on(self, event, f=None):
+    def on(self, event, func=None):
         def _on(f):
             self._events[event].append(f)
             return f
-        if f is None:
+        if func is None:
             return _on
-        return _on(f)
+        return _on(func)
 
     def emit(self, event, *args, **kwargs):
         handled = False
@@ -27,15 +27,53 @@ class EventEmitter(object):
         return handled
 
 
-class IRCClient(asyncio.Protocol):
-    c = config.Config()
-    buf = b''
-    ee = EventEmitter()
+class Config:
+    def __init__(self, path, pretty=False):
+        self.data = dict()
+        self.path = path
+        self.pretty = pretty
+        if self.path.exists():
+            with self.path.open() as f:
+                self.data = json.load(f)
 
-    def __init__(self):
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+        self._flush()
+
+    def _flush(self):
+        with self.path.open('w') as f:
+            if self.pretty:
+                json.dump(self.data, f, indent=4, sort_keys=True)
+            else:
+                json.dump(self.data, f)
+
+    def get(self, key, default=None):
+        return self.data.get(key, default)
+
+    def keys(self):
+        return self.data.keys()
+
+    def remove(self, key):
+        if key in self.data:
+            del self.data[key]
+            self._flush()
+
+    def set(self, key, value):
+        self[key] = value
+
+
+class IRCClient(asyncio.Protocol):
+    def __init__(self, config_path):
+        self.buf = b''
+        self.ee = EventEmitter()
+        self.c = Config(config_path)
         self.loop = asyncio.get_event_loop()
         self.t = None
         self.debug = False
+        self.admins = set()
 
     def __call__(self):
         return self
@@ -78,8 +116,7 @@ class IRCClient(asyncio.Protocol):
             return m.decode('iso-8859-1')
         except:
             self.log('** Failed decode using iso-8859-1.')
-            for b in m:
-                self.log('{} {}'.format(hex(b), chr(b)))
+            self.log(repr(m))
             raise
 
     @staticmethod
@@ -91,18 +128,19 @@ class IRCClient(asyncio.Protocol):
 
     def add_admin(self, nick):
         self.log('** Added {} to admins list'.format(nick))
-        self.c.ADMINS.add(nick)
+        self.admins.add(nick)
 
     def remove_admin(self, nick):
         self.log('** Removed {} from admins list'.format(nick))
-        self.c.ADMINS.discard(nick)
+        self.admins.discard(nick)
 
     def connection_made(self, transport):
         self.t = transport
         self.log('** Connection made')
-        self.out('NICK {}'.format(self.c.NICK))
+        self.out('NICK {}'.format(self.c['irc:nick']))
         m = 'USER {} {} x :{}'
-        self.out(m.format(self.c.IDENT, self.c.HOST, self.c.REALNAME))
+        ident = self.c['irc:ident']
+        self.out(m.format(ident, self.c['irc:host'], self.c['irc:name']))
 
     def data_received(self, data):
         self.buf = self.buf + data
@@ -122,13 +160,13 @@ class IRCClient(asyncio.Protocol):
         message = self.smart_decode(message)
         tokens = message.split()
         if len(tokens) > 0 and tokens[0] == 'PING':
-            self.ee.emit(tokens[0], message)
+            self.ee.emit(tokens[0], message, self)
         elif len(tokens) > 3 and tokens[3] == ':\x01ACTION':
-            self.ee.emit('ACTION', message)
+            self.ee.emit('ACTION', message, self)
         elif len(tokens) > 1:
-            self.ee.emit(tokens[1], message)
+            self.ee.emit(tokens[1], message, self)
         else:
-            self.ee.emit('catch_all', message)
+            self.ee.emit('catch_all', message, self)
 
     def out(self, message):
         # log messages then convert from unicode to bytes

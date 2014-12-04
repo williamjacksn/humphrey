@@ -35,11 +35,7 @@ class EightBallHandler:
     ]
 
     @classmethod
-    def handle(cls, sender, target, tokens, config):
-        if not hasattr(config, 'EIGHT_BALL'):
-            config.EIGHT_BALL = dict()
-        c = config.EIGHT_BALL
-
+    def handle(cls, sender, target, tokens, bot):
         public = list()
         private = list()
         response = random.choice(cls.RESPONSES)
@@ -49,12 +45,12 @@ class EightBallHandler:
             return public, private
 
         now = int(time.time())
-        last = int(c.get('8ball:last', 0))
-        wait = int(c.get('8ball:wait', 0))
+        last = int(bot.c.get('8ball:last', 0))
+        wait = int(bot.c.get('8ball:wait', 0))
         if last < now - wait:
             public.append(response)
             if 'again' not in response:
-                c['8ball:last'] = now
+                bot.c['8ball:last'] = now
         else:
             private.append(response)
             remaining = last + wait - now
