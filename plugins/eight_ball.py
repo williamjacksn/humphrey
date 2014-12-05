@@ -5,6 +5,7 @@ import time
 class EightBallHandler:
     cmds = ['!8ball']
     admin = False
+    help_topic = '8ball'
     help_text = ['Use \x02!8ball\x02 to ask a question of the magic 8ball.']
 
     RESPONSES = [

@@ -1,6 +1,7 @@
 class SetHandler:
     cmds = ['!set']
     admin = True
+    help_topic = 'set'
     help_text = [('Use \x02!set [<id>] [<value>]\x02 to display or change '
                   'configuration settings.'),
                  'Leave off <value> to see the current setting.',
@@ -30,6 +31,7 @@ class SetHandler:
 class UnsetHandler:
     cmds = ['!unset']
     admin = True
+    help_topic = 'unset'
     help_text = ['Use \x02!unset <id>\x02 to remove a configuration setting.']
 
     @classmethod

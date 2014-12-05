@@ -5,6 +5,7 @@ import time
 class RollHandler(object):
     cmds = ['!roll']
     admin = False
+    help_topic = 'roll'
     help_text = ['Use \x02!roll [#d^]\x02 to roll a ^-sided die # times.']
 
     @staticmethod

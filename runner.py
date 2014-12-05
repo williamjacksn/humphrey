@@ -31,12 +31,12 @@ def load_plugin(plug_name, bot):
     bot.c['plugins'] = list(plugins)
     for plug_handler in inspect.getmembers(module, inspect.isclass):
         cls = plug_handler[1]
-        cmd_dict = bot.plug_commands_admin if cls.admin else bot.plug_commands
         help_dict = bot.help_text_admin if cls.admin else bot.help_text
+        if hasattr(cls, 'help_topic'):
+            help_dict[cls.help_topic] = cls.help_text
+        cmd_dict = bot.plug_commands_admin if cls.admin else bot.plug_commands
         for cmd in cls.cmds:
             cmd_dict[cmd] = cls.handle
-            topic = cmd.lstrip('!')
-            help_dict[topic] = cls.help_text
             loaded_commands.append(cmd)
     return loaded_commands
 

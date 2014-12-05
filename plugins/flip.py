@@ -5,6 +5,7 @@ import time
 class FlipHandler:
     cmds = ['!flip']
     admin = False
+    help_topic = 'flip'
     help_text = ['Use \x02!flip\x02 to flip a coin.']
 
     @classmethod

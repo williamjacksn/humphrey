@@ -296,6 +296,7 @@ class IdHandler(RainwaveHandler):
 class KeyHandler(RainwaveHandler):
     cmds = ['!key']
     admin = False
+    help_topic = 'key'
     help_text = [('Get an API key from http://rainwave.cc/auth/ and use '
                   '\x02!key add <key>\x02 to tell me about it.'),
                  ('Use \x02!key drop\x02 to delete your key and \x02!key '
@@ -343,6 +344,7 @@ class KeyHandler(RainwaveHandler):
 class ListenerStatsHandler(RainwaveHandler):
     cmds = ['!lstats']
     admin = False
+    help_topic = 'lstats'
     help_text = [('Use \x02!lstats\x02 to see information about current '
                   'Rainwave radio listeners.')]
 
@@ -383,6 +385,7 @@ class NextHandler(RainwaveHandler):
             '!nxcover', '!nxcovers', '!nxgame', '!nxmw', '!nxoc',
             '!nxocr', '!nxomni', '!nxow', '!nxrw', '!nxvw']
     admin = False
+    help_topic = 'next'
     help_text = [('Use \x02!next [<channel>]\x02 to show what is up next on '
                   'the radio.'),
                  'Short version is \x02!np[<channel>]\x02.',
@@ -459,6 +462,7 @@ class NowPlayingHandler(RainwaveHandler):
             '!npcover', '!npcovers', '!npgame', '!npmw', '!npoc',
             '!npocr', '!npomni', '!npow', '!nprw', '!npvw']
     admin = False
+    help_topic = 'nowplaying'
     help_text = [('Use \x02!nowplaying [<channel>]\x02 to show what is now '
                   'playing on the radio.'),
                  'Short version is \x02!np[<channel>]\x02.',
@@ -525,6 +529,7 @@ class PrevPlayedHandler(RainwaveHandler):
             '!ppcover', '!ppcovers', '!ppgame', '!ppmw', '!ppoc',
             '!ppocr', '!ppomni', '!ppow', '!pprw', '!ppvw']
     admin = False
+    help_topic = 'prevplayed'
     help_text = [('Use \x02!prevplayed [<channel>]\x02 to show what was '
                   'previously playing on the radio.'),
                  'Short version is \x02!pp[<channel>]\x02.',
@@ -603,14 +608,15 @@ class PrevPlayedHandler(RainwaveHandler):
 class RequestHandler(RainwaveHandler):
     cmds = ['!rq']
     admin = False
+    help_topic = 'request'
     help_text = [('Use \x02!rq <song_id>\x02 to add a song to your request '
                   'queue.'),
                  ('Use \x02!rq unrated\x02 to fill your request queue with '
                   'unrated songs.'),
                  ('Use \x02!rq fav\x02 to add favourite songs to your request '
                   'queue.'),
-                 'Use \x02!rq pause\x02 to pause your request queue).',
-                 'Use \x02!rq resume\x02 to resume your request queue).',
+                 'Use \x02!rq pause\x02 to pause your request queue.',
+                 'Use \x02!rq resume\x02 to resume your request queue.',
                  ('Use \x02!rq clear\x02 to remove all songs from your '
                   'request queue.')]
 
@@ -685,6 +691,7 @@ class RequestHandler(RainwaveHandler):
 class UserStatsHandler(RainwaveHandler):
     cmds = ['!ustats']
     admin = False
+    help_topic = 'ustats'
     help_text = [('Use \x02!ustats [<username>]\x02 to see some statistics '
                   'about a Rainwave user.'),
                  'Leave off <username> to see your own stats.']
@@ -748,6 +755,7 @@ class UserStatsHandler(RainwaveHandler):
 class VoteHandler(RainwaveHandler):
     cmds = ['!vote', '!vt']
     admin = False
+    help_topic = 'vote'
     help_text = [('Use \x02!vote <index>\x02 to vote in the current election, '
                   'find the <index> with \x02!next\x02.')]
 
