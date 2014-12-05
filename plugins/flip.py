@@ -2,10 +2,6 @@ import random
 import time
 
 
-def is_irc_channel(s):
-    return s and s[0] == '#'
-
-
 class FlipHandler:
     cmds = ['!flip']
     admin = False
@@ -15,7 +11,7 @@ class FlipHandler:
     def handle(cls, sender, target, tokens, bot):
         flip = random.choice(['Heads!', 'Tails!'])
 
-        if not is_irc_channel(target):
+        if not bot.is_irc_channel(target):
             bot.send_privmsg(sender, flip)
             return
 

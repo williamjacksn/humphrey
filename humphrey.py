@@ -84,6 +84,10 @@ class IRCClient(asyncio.Protocol):
         print('{} {}'.format(t, message))
 
     @staticmethod
+    def is_irc_channel(s):
+        return s and s[0] == '#'
+
+    @staticmethod
     def remove_format_codes(m):
         m = m.replace(b'\x02', b'')  # bold
         m = m.replace(b'\x0f', b'')  # normal

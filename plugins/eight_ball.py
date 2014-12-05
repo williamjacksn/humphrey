@@ -2,10 +2,6 @@ import random
 import time
 
 
-def is_irc_channel(s):
-    return s and s[0] == '#'
-
-
 class EightBallHandler:
     cmds = ['!8ball']
     admin = False
@@ -38,7 +34,7 @@ class EightBallHandler:
     def handle(cls, sender, target, tokens, bot):
         response = random.choice(cls.RESPONSES)
 
-        if not is_irc_channel(target):
+        if not bot.is_irc_channel(target):
             bot.send_privmsg(sender, response)
             return
 
