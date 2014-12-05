@@ -102,7 +102,7 @@ class RainwaveHandler:
         user_id = bot.c.get('rainwave:user_id')
         key = bot.c.get('rainwave:key')
         d = cls.rw_listener(user_id, key, listener_id)
-        listener_name = d.get(u'listener').get(u'name')
+        listener_name = d.get('listener').get('name')
         return cls.get_current_channel_for_name(listener_name, bot)
 
     @classmethod
@@ -110,7 +110,7 @@ class RainwaveHandler:
         user_id = bot.c.get('rainwave:user_id')
         key = bot.c.get('rainwave:key')
         d = cls.rw_user_search(user_id, key, name)
-        return d.get(u'user').get(u'sid')
+        return d.get('user').get('sid')
 
     @classmethod
     def get_id_for_nick(cls, nick, bot):
@@ -425,12 +425,12 @@ class NextHandler(RainwaveHandler):
         m = 'Next up on the {}'.format(cls.chan_id_to_name[int(chan_id)])
         d = cls.rw_info(chan_id)
         event = d.get('sched_next')[idx]
-        sched_id = int(event.get(u'id'))
-        sched_type = event.get(u'type')
-        sched_name = event.get(u'name')
-        if sched_type == u'OneUp':
+        sched_id = int(event.get('id'))
+        sched_type = event.get('type')
+        sched_name = event.get('name')
+        if sched_type == 'OneUp':
             m = '{} ({} Power Hour):'.format(m, sched_name)
-            song = event.get(u'songs')[0]
+            song = event.get('songs')[0]
             m = '{} {}'.format(m, cls.song_string(song))
         elif sched_type == 'Election':
             if sched_name:
@@ -633,7 +633,7 @@ class RequestHandler(RainwaveHandler):
         if auth.get('key') is None:
             bot.send_privmsg(sender, cls.MISSING_KEY)
             return
-        if auth.get(u'chan_id') is None:
+        if auth.get('chan_id') is None:
             bot.send_privmsg(sender, 'You must be tuned in to request.')
             return
 
@@ -642,7 +642,7 @@ class RequestHandler(RainwaveHandler):
             user_id = auth.get('user_id')
             key = auth.get('key')
             d = cls.rw_song(user_id, key, auth.get('chan_id'), song_id)
-            song = d.get(u'song')
+            song = d.get('song')
             song_str = cls.song_string(song, simple=True)
             bot.send_privmsg(sender, 'Attempting request: {}'.format(song_str))
             d = cls.rw_request(user_id, key, auth.get('chan_id'), song_id)
