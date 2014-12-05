@@ -4,8 +4,9 @@ import importlib
 import inspect
 import pathlib
 import sys
+import traceback
 
-config_file = pathlib.Path(__file__).resolve().with_name('config.json')
+config_file = pathlib.Path(__file__).resolve().with_name('_config.json')
 gbot = humphrey.IRCClient(config_file)
 gbot.c.pretty = True
 gbot.plug_commands = dict()
@@ -120,12 +121,12 @@ def dispatch_plugin_command(message, bot):
         handler = bot.plug_commands_admin.get(cmd)
     if handler is not None:
         try:
-            text = message.split(' :')[1]
+            text = message.split(' :', 1)[1]
             handler(source_nick, tokens[2], text.split(), bot)
         except Exception as exc:
             m = 'Exception in {}'.format(cmd)
             bot.log('** {}'.format(m))
-            bot.log(exc)
+            bot.log(traceback.format_exc())
             bot.send_privmsg(source_nick, m)
 
 
