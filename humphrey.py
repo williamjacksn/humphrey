@@ -36,6 +36,9 @@ class Config:
             with self.path.open() as f:
                 self.data = json.load(f)
 
+    def __contains__(self, item):
+        return item in self.data
+
     def __getitem__(self, key):
         return self.data[key]
 
