@@ -124,7 +124,7 @@ def dispatch_plugin_command(message, bot):
             text = message.split(' :', 1)[1]
             handler(source_nick, tokens[2], text.split(), bot)
         except Exception as exc:
-            m = 'Exception in {}'.format(cmd)
+            m = 'Exception in {}. Check the logs.'.format(cmd)
             bot.log('** {}'.format(m))
             bot.log(traceback.format_exc())
             bot.send_privmsg(source_nick, m)
