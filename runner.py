@@ -19,7 +19,7 @@ def load_plugin(plug_name, bot):
     loaded_commands = list()
     module_name = 'plugins.{}'.format(plug_name)
     if module_name in sys.modules:
-        module = importlib.reload(module_name)
+        module = importlib.reload(sys.modules[module_name])
     else:
         try:
             module = importlib.import_module(module_name)
