@@ -36,7 +36,7 @@ def load_plugin(plug_name, bot):
             help_dict[cls.help_topic] = cls.help_text
         cmd_dict = bot.plug_commands_admin if cls.admin else bot.plug_commands
         for cmd in cls.cmds:
-            cmd_dict[cmd] = cls.handle
+            cmd_dict[cmd.lower()] = cls.handle
             loaded_commands.append(cmd)
     return loaded_commands
 
@@ -63,7 +63,7 @@ def handle_help(message, bot):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     source_nick, _, _ = bot.parse_hostmask(source)
-    if len(tokens) > 3 and tokens[3] == ':!help':
+    if len(tokens) > 3 and tokens[3].lower() == ':!help':
         bot.log('** Handling !help')
         if len(tokens) < 5:
             m = 'Use \x02!help [<topic>]\x02 with one of these topics:'
@@ -115,7 +115,7 @@ def dispatch_plugin_command(message, bot):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     source_nick, _, _ = bot.parse_hostmask(source)
-    cmd = tokens[3].lstrip(':')
+    cmd = tokens[3].lstrip(':').lower()
     handler = bot.plug_commands.get(cmd)
     if handler is None and source_nick in bot.admins:
         handler = bot.plug_commands_admin.get(cmd)
@@ -123,7 +123,7 @@ def dispatch_plugin_command(message, bot):
         try:
             text = message.split(' :', 1)[1]
             handler(source_nick, tokens[2], text.split(), bot)
-        except Exception as exc:
+        except Exception:
             m = 'Exception in {}. Check the logs.'.format(cmd)
             bot.log('** {}'.format(m))
             bot.log(traceback.format_exc())
