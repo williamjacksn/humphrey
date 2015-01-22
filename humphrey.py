@@ -77,6 +77,7 @@ class IRCClient(asyncio.Protocol):
         self.t = None
         self.debug = False
         self.admins = set()
+        self.members = set()
 
     def __call__(self):
         return self
@@ -136,9 +137,17 @@ class IRCClient(asyncio.Protocol):
     def add_admin(self, nick):
         self.log('** Added {} to admins list'.format(nick))
         self.admins.add(nick)
+        self.members.add(nick)
 
     def remove_admin(self, nick):
         self.log('** Removed {} from admins list'.format(nick))
+        self.admins.discard(nick)
+
+    def add_member(self, nick):
+        self.members.add(nick)
+
+    def remove_member(self, nick):
+        self.members.discard(nick)
         self.admins.discard(nick)
 
     def connection_made(self, transport):

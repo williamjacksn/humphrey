@@ -158,6 +158,8 @@ def on_nick(message, bot):
     source = tokens[0].lstrip(':')
     nick, _, _ = bot.parse_hostmask(source)
     new_nick = tokens[2].lstrip(':')
+    bot.add_member(new_nick)
+    bot.remove_member(nick)
     if nick in bot.admins:
         bot.add_admin(new_nick)
         bot.remove_admin(nick)
@@ -169,6 +171,7 @@ def on_part(message, bot):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     nick, _, _ = bot.parse_hostmask(source)
+    bot.remove_member(nick)
     if nick in bot.admins:
         bot.remove_admin(nick)
 
@@ -186,6 +189,7 @@ def on_quit(message, bot):
     tokens = message.split()
     source = tokens[0].lstrip(':')
     nick, _, _ = bot.parse_hostmask(source)
+    bot.remove_member(nick)
     if nick in bot.admins:
         bot.remove_admin(nick)
 
@@ -196,8 +200,10 @@ def on_rpl_namreply(message, bot):
     tokens = message.split()
     for name in tokens[5:]:
         name = name.lstrip(':')
+        nick = name.lstrip('~@%+')
+        bot.add_member(nick)
         if name.startswith(('~', '@', '%')):
-            bot.add_admin(name.lstrip('~@%'))
+            bot.add_admin(nick)
 
 
 @gbot.ee.on('376')
