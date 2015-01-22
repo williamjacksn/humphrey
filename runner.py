@@ -158,11 +158,20 @@ def on_nick(message, bot):
     source = tokens[0].lstrip(':')
     nick, _, _ = bot.parse_hostmask(source)
     new_nick = tokens[2].lstrip(':')
-    bot.add_member(new_nick)
-    bot.remove_member(nick)
     if nick in bot.admins:
         bot.add_admin(new_nick)
         bot.remove_admin(nick)
+    bot.add_member(new_nick)
+    bot.remove_member(nick)
+
+
+@gbot.ee.on('JOIN')
+def on_join(message, bot):
+    bot.log('<= {}'.format(message))
+    tokens = message.split()
+    source = tokens[0].lstrip(':')
+    nick, _, _ = bot.parse_hostmask(source)
+    bot.add_member(nick)
 
 
 @gbot.ee.on('PART')
@@ -172,8 +181,6 @@ def on_part(message, bot):
     source = tokens[0].lstrip(':')
     nick, _, _ = bot.parse_hostmask(source)
     bot.remove_member(nick)
-    if nick in bot.admins:
-        bot.remove_admin(nick)
 
 
 @gbot.ee.on('PING')
@@ -231,7 +238,6 @@ def on_rpl_endofmotd(message, bot):
 @gbot.ee.on('375')  # RPL_MOTDSTART
 @gbot.ee.on('451')  # ERR_NOTREGISTERED
 @gbot.ee.on('ACTION')
-@gbot.ee.on('JOIN')
 @gbot.ee.on('NOTICE')
 @gbot.ee.on('TOPIC')
 def known(message, bot):

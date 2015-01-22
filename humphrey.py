@@ -144,9 +144,11 @@ class IRCClient(asyncio.Protocol):
         self.admins.discard(nick)
 
     def add_member(self, nick):
+        self.log('** Added {} to members list'.format(nick))
         self.members.add(nick)
 
     def remove_member(self, nick):
+        self.log('** Removed {} from members list'.format(nick))
         self.members.discard(nick)
         self.admins.discard(nick)
 
