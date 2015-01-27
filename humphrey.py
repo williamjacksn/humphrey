@@ -135,26 +135,31 @@ class IRCClient(asyncio.Protocol):
         return nick, user, host
 
     def add_admin(self, nick):
-        self.log('** Added {} to admins list'.format(nick))
+        if self.debug:
+            self.log('** Added {} to admins list'.format(nick))
         self.admins.add(nick)
         self.members.add(nick)
 
     def remove_admin(self, nick):
-        self.log('** Removed {} from admins list'.format(nick))
+        if self.debug:
+            self.log('** Removed {} from admins list'.format(nick))
         self.admins.discard(nick)
 
     def add_member(self, nick):
-        self.log('** Added {} to members list'.format(nick))
+        if self.debug:
+            self.log('** Added {} to members list'.format(nick))
         self.members.add(nick)
 
     def remove_member(self, nick):
-        self.log('** Removed {} from members list'.format(nick))
+        if self.debug:
+            self.log('** Removed {} from members list'.format(nick))
         self.members.discard(nick)
         self.admins.discard(nick)
 
     def connection_made(self, transport):
         self.t = transport
-        self.log('** Connection made')
+        if self.debug:
+            self.log('** Connection made')
         self.out('NICK {}'.format(self.c['irc:nick']))
         m = 'USER {} {} x :{}'
         ident = self.c['irc:ident']
@@ -169,7 +174,8 @@ class IRCClient(asyncio.Protocol):
             self.loop.call_soon(self._in, line)
 
     def connection_lost(self, exc):
-        self.log('** Connection lost')
+        if self.debug:
+            self.log('** Connection lost')
         self.loop.stop()
 
     def _in(self, message):
@@ -190,7 +196,8 @@ class IRCClient(asyncio.Protocol):
         # log messages then convert from unicode to bytes
         # and write to transport
         if message:
-            self.log('=> {}'.format(message))
+            if self.debug:
+                self.log('=> {}'.format(message))
             self.t.write('{}\r\n'.format(message).encode())
 
     def send_privmsg(self, target, message):
