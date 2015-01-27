@@ -183,13 +183,6 @@ def on_part(message, bot):
     bot.remove_member(nick)
 
 
-@gbot.ee.on('PING')
-def on_ping(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    bot.out('PONG {}'.format(tokens[1]))
-
-
 @gbot.ee.on('QUIT')
 def on_quit(message, bot):
     bot.log('<= {}'.format(message))

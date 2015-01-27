@@ -184,6 +184,9 @@ class IRCClient(asyncio.Protocol):
         message = self.smart_decode(message)
         tokens = message.split()
         if len(tokens) > 0 and tokens[0] == 'PING':
+            if self.debug:
+                self.log('<= {}'.format(message))
+            self.out('PONG {}'.format(tokens[1]))
             self.ee.emit(tokens[0], message, self)
         elif len(tokens) > 3 and tokens[3] == ':\x01ACTION':
             self.ee.emit('ACTION', message, self)
