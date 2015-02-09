@@ -8,6 +8,7 @@ import traceback
 
 config_file = pathlib.Path(__file__).resolve().with_name('_config.json')
 gbot = humphrey.IRCClient(config_file)
+gbot.debug = True
 gbot.c.pretty = True
 gbot.plug_commands = dict()
 gbot.plug_commands_admin = dict()
@@ -130,116 +131,10 @@ def dispatch_plugin_command(message, bot):
             bot.send_privmsg(source_nick, m)
 
 
-@gbot.ee.on('MODE')
-def on_mode(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    target = tokens[2]
-    if target == bot.c.get('irc:channel'):
-        modes = list()
-        modespec = tokens[3]
-        mode_action = ''
-        for char in modespec:
-            if char in ['+', '-']:
-                mode_action = char
-            else:
-                modes.append('{}{}'.format(mode_action, char))
-        for mode, nick in zip(modes, tokens[4:]):
-            if mode in ['+h', '+o']:
-                bot.add_admin(nick)
-            elif mode in ['-h', '-o']:
-                bot.remove_admin(nick)
-
-
-@gbot.ee.on('NICK')
-def on_nick(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    source = tokens[0].lstrip(':')
-    nick, _, _ = bot.parse_hostmask(source)
-    new_nick = tokens[2].lstrip(':')
-    if nick in bot.admins:
-        bot.add_admin(new_nick)
-        bot.remove_admin(nick)
-    bot.add_member(new_nick)
-    bot.remove_member(nick)
-
-
-@gbot.ee.on('JOIN')
-def on_join(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    source = tokens[0].lstrip(':')
-    nick, _, _ = bot.parse_hostmask(source)
-    bot.add_member(nick)
-
-
-@gbot.ee.on('PART')
-def on_part(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    source = tokens[0].lstrip(':')
-    nick, _, _ = bot.parse_hostmask(source)
-    bot.remove_member(nick)
-
-
-@gbot.ee.on('QUIT')
-def on_quit(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    source = tokens[0].lstrip(':')
-    nick, _, _ = bot.parse_hostmask(source)
-    bot.remove_member(nick)
-    if nick in bot.admins:
-        bot.remove_admin(nick)
-
-
-@gbot.ee.on('353')
-def on_rpl_namreply(message, bot):
-    bot.log('<= {}'.format(message))
-    tokens = message.split()
-    for name in tokens[5:]:
-        name = name.lstrip(':')
-        nick = name.lstrip('~@%+')
-        bot.add_member(nick)
-        if name.startswith(('~', '@', '%')):
-            bot.add_admin(nick)
-
-
 @gbot.ee.on('376')
 def on_rpl_endofmotd(message, bot):
     bot.log('<= {}'.format(message))
     bot.out('JOIN {}'.format(bot.c['irc:channel']))
-
-
-@gbot.ee.on('001')  # RPL_WELCOME
-@gbot.ee.on('002')  # RPL_YOURHOST
-@gbot.ee.on('003')  # RPL_CREATED
-@gbot.ee.on('004')  # RPL_MYINFO
-@gbot.ee.on('005')  # RPL_ISUPPORT
-@gbot.ee.on('251')  # RPL_LUSERCLIENT
-@gbot.ee.on('252')  # RPL_LUSEROP
-@gbot.ee.on('253')  # RPL_LUSERUNKNOWN
-@gbot.ee.on('254')  # RPL_LUSERCHANNELS
-@gbot.ee.on('255')  # RPL_LUSERME
-@gbot.ee.on('265')  # RPL_LOCALUSERS
-@gbot.ee.on('266')  # RPL_GLOBALUSERS
-@gbot.ee.on('332')  # RPL_TOPIC
-@gbot.ee.on('333')  # RPL_TOPICWHOTIME
-@gbot.ee.on('366')  # RPL_ENDOFNAMES
-@gbot.ee.on('372')  # RPL_MOTD
-@gbot.ee.on('375')  # RPL_MOTDSTART
-@gbot.ee.on('451')  # ERR_NOTREGISTERED
-@gbot.ee.on('ACTION')
-@gbot.ee.on('NOTICE')
-@gbot.ee.on('TOPIC')
-def known(message, bot):
-    bot.log('<= {}'.format(message))
-
-
-@gbot.ee.on('catch_all')
-def unknown(message, bot):
-    bot.log('XX {}'.format(message))
 
 
 if __name__ == '__main__':

@@ -182,15 +182,27 @@ class IRCClient(asyncio.Protocol):
         # convert message from bytes to unicode
         # then emit an appropriate event
         message = self.smart_decode(message)
+        if self.debug:
+            self.log('<= {}'.format(message))
         tokens = message.split()
         if len(tokens) > 0 and tokens[0] == 'PING':
-            if self.debug:
-                self.log('<= {}'.format(message))
             self.out('PONG {}'.format(tokens[1]))
             self.ee.emit(tokens[0], message, self)
         elif len(tokens) > 3 and tokens[3] == ':\x01ACTION':
             self.ee.emit('ACTION', message, self)
         elif len(tokens) > 1:
+            if tokens[1] == '353':
+                self._handle_namreply(tokens)
+            elif tokens[1] == 'JOIN':
+                self._handle_join(tokens)
+            elif tokens[1] == 'MODE':
+                self._handle_mode(tokens)
+            elif tokens[1] == 'NICK':
+                self._handle_nick(tokens)
+            elif tokens[1] == 'PART':
+                self._handle_part(tokens)
+            elif tokens[1] == 'QUIT':
+                self._handle_quit(tokens)
             self.ee.emit(tokens[1], message, self)
         else:
             self.ee.emit('catch_all', message, self)
@@ -205,3 +217,53 @@ class IRCClient(asyncio.Protocol):
 
     def send_privmsg(self, target, message):
         self.out('PRIVMSG {} :{}'.format(target, message))
+
+    def _handle_join(self, tokens):
+        source = tokens[0].lstrip(':')
+        nick, _, _ = self.parse_hostmask(source)
+        self.add_member(nick)
+
+    def _handle_mode(self, tokens):
+        target = tokens[2]
+        if target == self.c.get('irc:channel'):
+            modes = list()
+            modespec = tokens[3]
+            mode_action = ''
+            for char in modespec:
+                if char in ['+', '-']:
+                    mode_action = char
+                else:
+                    modes.append('{}{}'.format(mode_action, char))
+            for mode, nick in zip(modes, tokens[4:]):
+                if mode in ['+h', '+o']:
+                    self.add_admin(nick)
+                elif mode in ['-h', '-o']:
+                    self.remove_admin(nick)
+
+    def _handle_namreply(self, tokens):
+        for name in tokens[5:]:
+            name = name.lstrip(':')
+            nick = name.lstrip('~@%+')
+            self.add_member(nick)
+            if name.startswith(('~', '@', '%')):
+                self.add_admin(nick)
+
+    def _handle_nick(self, tokens):
+        source = tokens[0].lstrip(':')
+        nick, _, _ = self.parse_hostmask(source)
+        new_nick = tokens[2].lstrip(':')
+        if nick in self.admins:
+            self.add_admin(new_nick)
+        else:
+            self.add_member(new_nick)
+        self.remove_member(nick)
+
+    def _handle_part(self, tokens):
+        source = tokens[0].lstrip(':')
+        nick, _, _ = self.parse_hostmask(source)
+        self.remove_member(nick)
+
+    def _handle_quit(self, tokens):
+        source = tokens[0].lstrip(':')
+        nick, _, _ = self.parse_hostmask(source)
+        self.remove_member(nick)
