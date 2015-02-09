@@ -89,7 +89,7 @@ class IRCClient(asyncio.Protocol):
 
     @staticmethod
     def is_irc_channel(s):
-        return s and s[0] == '#'
+        return s and s.startswith('#')
 
     @staticmethod
     def remove_format_codes(m):
