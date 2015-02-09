@@ -593,7 +593,8 @@ class PrevPlayedHandler(RainwaveHandler):
         m = '{}: {}'.format(m, cls.song_string(song))
 
         if bot.is_irc_channel(target):
-            if sched_id == bot.c.get('rainwave:pp:{}:{}'.format(chan_id, idx), 0):
+            last_sched_id = 'rainwave:pp:{}:{}'.format(chan_id, idx)
+            if sched_id == bot.c.get(last_sched_id, 0):
                 c = 'You can only use {} in {} once per'.format(cmd, target)
                 c = '{} song.'.format(c)
                 bot.send_privmsg(sender, c)
