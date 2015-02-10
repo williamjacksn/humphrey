@@ -113,8 +113,6 @@ class IRCClient(asyncio.Protocol):
         return m
 
     def smart_decode(self, m):
-        if self.debug:
-            self.log('** {}'.format(repr(m)))
         m = self.remove_format_codes(m)
         try:
             return m.decode()
