@@ -32,12 +32,16 @@ def load_plugin(plug_name, bot):
     bot.c['plugins'] = list(plugins)
     for plug_handler in inspect.getmembers(module, inspect.isclass):
         cls = plug_handler[1]
+        try:
+            handler = cls(bot)
+        except TypeError:
+            handler = cls()
         help_dict = bot.help_text_admin if cls.admin else bot.help_text
         if hasattr(cls, 'help_topic'):
             help_dict[cls.help_topic] = cls.help_text
         cmd_dict = bot.plug_commands_admin if cls.admin else bot.plug_commands
         for cmd in cls.cmds:
-            cmd_dict[cmd.lower()] = cls.handle
+            cmd_dict[cmd.lower()] = handler
             loaded_commands.append(cmd)
     return loaded_commands
 
@@ -52,11 +56,6 @@ def initialize_plugins(bot):
             bot.log('** Loaded a command: {}'.format(command))
 
 initialize_plugins(gbot)
-
-
-@gbot.ee.on('PRIVMSG')
-def log_privmsg(message, bot):
-    bot.log('<= {}'.format(message))
 
 
 @gbot.ee.on('PRIVMSG')
@@ -123,7 +122,7 @@ def dispatch_plugin_command(message, bot):
     if handler is not None:
         try:
             text = message.split(' :', 1)[1]
-            handler(source_nick, tokens[2], text.split(), bot)
+            handler.handle(source_nick, tokens[2], text.split(), bot)
         except Exception:
             m = 'Exception in {}. Check the logs.'.format(cmd)
             bot.log('** {}'.format(m))
