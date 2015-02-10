@@ -50,6 +50,7 @@ def initialize_plugins(bot):
     for plug in bot.c.get('plugins', list()):
         try:
             commands = load_plugin(plug, bot)
+            bot.log('** Loaded a plugin: {}'.format(plug))
         except ImportError:
             continue
         for command in commands:
@@ -101,6 +102,8 @@ def handle_load(message, bot):
         plug_name = tokens[4]
         try:
             commands = load_plugin(plug_name, bot)
+            m = 'Loaded a plugin: {}'.format(plug_name)
+            bot.send_privmsg(source_nick, m)
         except ImportError:
             m = 'Error loading plugin {}. Check the logs.'.format(plug_name)
             bot.send_privmsg(source_nick, m)
