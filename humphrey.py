@@ -213,6 +213,9 @@ class IRCClient(asyncio.Protocol):
                 self.log('=> {}'.format(message))
             self.t.write('{}\r\n'.format(message).encode())
 
+    def send_action(self, target, message):
+        self.out('PRIVMSG {} :\x01ACTION {}\x01'.format(target, message))
+
     def send_privmsg(self, target, message):
         self.out('PRIVMSG {} :{}'.format(target, message))
 
