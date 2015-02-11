@@ -17,7 +17,11 @@ class SetHandler:
             bot.send_privmsg(sender, '{} = {}'.format(key, value))
         elif len(tokens) > 1:
             key = tokens[1]
-            bot.send_privmsg(sender, '{} = {}'.format(key, bot.c[key]))
+            value = bot.c.get(key)
+            if value is None:
+                bot.send_privmsg(sender, '{} is not set.'.format(key))
+            else:
+                bot.send_privmsg(sender, '{} = {}'.format(key, value))
         else:
             config_ids = sorted(bot.c.keys())
             max_length = int(bot.c.get('config:max_length', 10))
