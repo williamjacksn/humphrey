@@ -17,9 +17,10 @@ class TitleHandler:
             source = tokens[0].lstrip(':')
             source_nick, _, _ = bot.parse_hostmask(source)
             cmd = tokens[3].lstrip(':').lower()
+            builtin_commands = {'!load', '!help'}
             public_commands = set(bot.plug_commands.keys())
             admin_commands = set(bot.plug_commands_admin.keys())
-            all_commands = public_commands | admin_commands
+            all_commands = builtin_commands | public_commands | admin_commands
             if cmd in all_commands:
                 return
 
