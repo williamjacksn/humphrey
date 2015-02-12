@@ -135,6 +135,9 @@ def dispatch_plugin_command(message, bot):
 
 @gbot.ee.on('376')
 def on_rpl_endofmotd(message, bot):
+    password = bot.c.get('irc:nickservpass')
+    if password is not None:
+        bot.send_privmsg('nickserv', 'identify {}'.format(password))
     bot.out('JOIN {}'.format(bot.c['irc:channel']))
 
 
