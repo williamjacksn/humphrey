@@ -135,7 +135,6 @@ def dispatch_plugin_command(message, bot):
 
 @gbot.ee.on('376')
 def on_rpl_endofmotd(message, bot):
-    bot.log('<= {}'.format(message))
     bot.out('JOIN {}'.format(bot.c['irc:channel']))
 
 
