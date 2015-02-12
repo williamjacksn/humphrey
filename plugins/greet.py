@@ -32,7 +32,7 @@ class GreetHandler:
 
     @staticmethod
     def send_greeting(nick, bot):
-        greeting = bot.c.get('greet:{}'.format(nick))
+        greeting = bot.c.get('greet:{}'.format(nick.lower()))
         channel = bot.c.get('irc:channel')
         if greeting is not None:
             if greeting.startswith('/me '):
