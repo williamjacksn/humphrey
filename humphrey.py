@@ -78,6 +78,7 @@ class IRCClient(asyncio.Protocol):
         self.debug = False
         self.admins = set()
         self.members = set()
+        self.in_channel = False
 
     def __call__(self):
         return self
@@ -191,6 +192,8 @@ class IRCClient(asyncio.Protocol):
         elif len(tokens) > 1:
             if tokens[1] == '353':
                 self._handle_namreply(tokens)
+            elif tokens[1] == '366':
+                self.in_channel = True
             elif tokens[1] == 'JOIN':
                 self._handle_join(tokens)
             elif tokens[1] == 'MODE':
