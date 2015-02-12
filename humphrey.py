@@ -2,6 +2,7 @@ import asyncio
 import collections
 import datetime
 import json
+import sys
 
 
 class EventEmitter(object):
@@ -87,6 +88,7 @@ class IRCClient(asyncio.Protocol):
     def log(message):
         t = datetime.datetime.utcnow()
         print('{} {}'.format(t, message))
+        sys.stdout.flush()
 
     @staticmethod
     def is_irc_channel(s):
