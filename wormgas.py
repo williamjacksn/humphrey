@@ -25,7 +25,7 @@ def load_plugin(plug_name, bot):
         try:
             module = importlib.import_module(module_name)
         except ImportError as exc:
-            bot.log(exc)
+            bot.log('** Error loading a plugin: {}'.format(exc))
             raise
     plugins = set(bot.c.get('plugins', list()))
     plugins.add(plug_name)
