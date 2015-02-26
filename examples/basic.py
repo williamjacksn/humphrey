@@ -6,7 +6,7 @@ import pathlib
 
 
 def main():
-    config_file = pathlib.Path(__file__).resolve().with_name('_basic.json')
+    config_file = pathlib.Path(__file__).resolve().with_name('basic.json')
     irc = humphrey.IRCClient(config_file)
     irc.c.pretty = True
     irc.debug = True
