@@ -227,6 +227,9 @@ class IRCClient(asyncio.Protocol):
     def send_privmsg(self, target, message):
         self.out('PRIVMSG {} :{}'.format(target, message))
 
+    def send_topic(self, target, topic):
+        self.out('TOPIC {} :{}'.format(target, topic))
+
     def _handle_join(self, tokens):
         source = tokens[0].lstrip(':')
         nick, _, _ = self.parse_hostmask(source)
