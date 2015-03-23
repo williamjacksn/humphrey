@@ -3,3 +3,6 @@ __pycache__
 .vagrant
 *.json
 *.sqlite*
+build
+dist
+humphrey.egg-info
