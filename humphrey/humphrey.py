@@ -162,10 +162,24 @@ class IRCClient(asyncio.Protocol):
         self.t = transport
         if self.debug:
             self.log('** Connection made')
-        self.out('NICK {}'.format(self.c['irc:nick']))
+        nick = self.c.get('irc:nick')
+        if nick is None:
+            self.c['irc:nick'] = 'humphrey'
+            self.log('** Edit {} and set {!r}'.format(self.c.path, 'irc:nick'))
+            self.loop.stop()
+        self.out('NICK {}'.format(nick))
         m = 'USER {} {} x :{}'
-        ident = self.c['irc:ident']
-        self.out(m.format(ident, self.c['irc:host'], self.c['irc:name']))
+        ident = self.c.get('irc:ident')
+        if ident is None:
+            self.c['irc:ident'] = 'humphrey'
+            self.log('** Edit {} and set {!r}'.format(self.c.path, 'irc:ident'))
+            self.loop.stop()
+        name = self.c.get('irc:name')
+        if name is None:
+            self.c['irc:name'] = 'Humphrey'
+            self.log('** Edit {} and set {!r}'.format(self.c.path, 'irc:name'))
+            self.loop.stop()
+        self.out(m.format(ident, self.c['irc:host'], name))
 
     def data_received(self, data):
         self.buf = self.buf + data
