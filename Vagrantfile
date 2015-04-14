@@ -5,11 +5,9 @@ provision_script = <<END_OF_LINE
 
 aptitude update
 aptitude --assume-yes full-upgrade
-aptitude --assume-yes install htop python3-pip
+aptitude --assume-yes install git libbz2-dev libreadline-dev libsqlite3-dev libssl-dev
 apt-get autoremove
 aptitude clean
-
-pip3 install --upgrade pep8
 
 END_OF_LINE
 
