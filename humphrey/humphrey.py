@@ -136,6 +136,12 @@ class IRCClient(asyncio.Protocol):
         user, _, host = userhost.partition('@')
         return nick, user, host
 
+    def is_admin(self, nick):
+        for channel, admins in self.admins.items():
+            if nick in admins:
+                return True
+        return False
+
     def add_admin(self, channel, nick):
         if self.debug:
             self.log('** Added {} to {} admins list'.format(nick, channel))
