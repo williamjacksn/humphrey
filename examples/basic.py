@@ -12,7 +12,7 @@ def main():
     irc.debug = True
 
     @irc.ee.on('376')
-    def on_rpl_endofmotd(message, bot):
+    def on_rpl_endofmotd(_, bot):
         bot.out('JOIN {}'.format(bot.c.get('irc:channel')))
 
     loop = asyncio.get_event_loop()

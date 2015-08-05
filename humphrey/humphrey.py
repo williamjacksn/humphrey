@@ -30,7 +30,7 @@ class EventEmitter(object):
 
 class Config:
     def __init__(self, path, pretty=False):
-        self.data = dict()
+        self.data = {}
         self.path = path
         self.pretty = pretty
         if self.path.exists():
@@ -50,7 +50,7 @@ class Config:
     def _flush(self):
         with self.path.open('w') as f:
             if self.pretty:
-                json.dump(self.data, f, indent=4, sort_keys=True)
+                json.dump(self.data, f, indent=2, sort_keys=True)
             else:
                 json.dump(self.data, f)
 
@@ -77,10 +77,10 @@ class IRCClient(asyncio.Protocol):
         self.loop = asyncio.get_event_loop()
         self.t = None
         self.debug = False
-        self.admins = set()
-        self.members = set()
+        self.admins = collections.defaultdict(set)
+        self.members = collections.defaultdict(set)
         self.in_channel = False
-        self.topic = None
+        self.topics = {}
 
     def __call__(self):
         return self
@@ -136,27 +136,27 @@ class IRCClient(asyncio.Protocol):
         user, _, host = userhost.partition('@')
         return nick, user, host
 
-    def add_admin(self, nick):
+    def add_admin(self, channel, nick):
         if self.debug:
-            self.log('** Added {} to admins list'.format(nick))
-        self.admins.add(nick)
-        self.members.add(nick)
+            self.log('** Added {} to {} admins list'.format(nick, channel))
+        self.admins[channel].add(nick)
+        self.members[channel].add(nick)
 
-    def remove_admin(self, nick):
+    def remove_admin(self, channel, nick):
         if self.debug:
-            self.log('** Removed {} from admins list'.format(nick))
-        self.admins.discard(nick)
+            self.log('** Removed {} from {} admins list'.format(nick, channel))
+        self.admins[channel].discard(nick)
 
-    def add_member(self, nick):
+    def add_member(self, channel, nick):
         if self.debug:
-            self.log('** Added {} to members list'.format(nick))
-        self.members.add(nick)
+            self.log('** Added {} to {} members list'.format(nick, channel))
+        self.members[channel].add(nick)
 
-    def remove_member(self, nick):
+    def remove_member(self, channel, nick):
         if self.debug:
-            self.log('** Removed {} from members list'.format(nick))
-        self.members.discard(nick)
-        self.admins.discard(nick)
+            self.log('** Removed {} from {} members list'.format(nick, channel))
+        self.members[channel].discard(nick)
+        self.admins[channel].discard(nick)
 
     def connection_made(self, transport):
         self.t = transport
@@ -247,55 +247,63 @@ class IRCClient(asyncio.Protocol):
     def _handle_join(self, tokens):
         source = tokens[0].lstrip(':')
         nick, _, _ = self.parse_hostmask(source)
-        self.add_member(nick)
+        channel = tokens[2].lstrip(':')
+        self.add_member(channel, nick)
 
     def _handle_mode(self, tokens):
         target = tokens[2]
-        if target == self.c.get('irc:channel'):
-            modes = list()
+        if self.is_irc_channel(target):
+            modes = []
             modespec = tokens[3]
             mode_action = ''
             for char in modespec:
                 if char in ['+', '-']:
                     mode_action = char
                 else:
-                    modes.append('{}{}'.format(mode_action, char))
+                    modes.append(mode_action + char)
             for mode, nick in zip(modes, tokens[4:]):
                 if mode in ['+h', '+o']:
-                    self.add_admin(nick)
+                    self.add_admin(target, nick)
                 elif mode in ['-h', '-o']:
-                    self.remove_admin(nick)
+                    self.remove_admin(target, nick)
 
     def _handle_namreply(self, tokens):
+        channel = tokens[4]
         for name in tokens[5:]:
             name = name.lstrip(':')
             nick = name.lstrip('~@%+')
-            self.add_member(nick)
+            self.add_member(channel, nick)
             if name.startswith(('~', '@', '%')):
-                self.add_admin(nick)
+                self.add_admin(channel, nick)
 
     def _handle_nick(self, tokens):
         source = tokens[0].lstrip(':')
         nick, _, _ = self.parse_hostmask(source)
         new_nick = tokens[2].lstrip(':')
-        if nick in self.admins:
-            self.add_admin(new_nick)
-        else:
-            self.add_member(new_nick)
-        self.remove_member(nick)
+        for channel, admins in self.admins.items():
+            if nick in admins:
+                self.add_admin(channel, new_nick)
+                self.remove_admin(channel, nick)
+        for channel, members in self.members.items():
+            if nick in members:
+                self.add_member(channel, new_nick)
+                self.remove_member(channel, nick)
 
     def _handle_part(self, tokens):
         source = tokens[0].lstrip(':')
         nick, _, _ = self.parse_hostmask(source)
-        self.remove_member(nick)
+        channel = tokens[2]
+        self.remove_member(channel, nick)
 
     def _handle_quit(self, tokens):
         source = tokens[0].lstrip(':')
         nick, _, _ = self.parse_hostmask(source)
-        self.remove_member(nick)
+        for channel, _ in self.members.items():
+            self.remove_member(channel, nick)
 
     def _handle_topic(self, message):
-        new_topic = message.split(' :', 1)[1]
-        self.topic = new_topic
+        channel = message.split()[2]
+        new_topic = message.split(' :', maxsplit=1)[1]
+        self.topics[channel] = new_topic
         if self.debug:
-            self.log('** Setting new topic {!r}'.format(new_topic))
+            self.log('** Setting {} topic to {!r}'.format(channel, new_topic))
