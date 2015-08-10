@@ -308,7 +308,11 @@ class IRCClient(asyncio.Protocol):
             self.remove_member(channel, nick)
 
     def _handle_topic(self, message):
-        channel = message.split()[2]
+        tokens = message.split()
+        if tokens[1] == 'TOPIC':
+            channel = tokens[2]
+        else:
+            channel = tokens[3]
         new_topic = message.split(' :', maxsplit=1)[1]
         self.topics[channel] = new_topic
         if self.debug:
