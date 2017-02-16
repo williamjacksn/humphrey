@@ -1,8 +1,9 @@
 import asyncio
 import collections
-import datetime
 import json
-import sys
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class EventEmitter(object):
@@ -86,12 +87,6 @@ class IRCClient(asyncio.Protocol):
         return self
 
     @staticmethod
-    def log(message):
-        t = datetime.datetime.utcnow()
-        print('{} {}'.format(t, message))
-        sys.stdout.flush()
-
-    @staticmethod
     def is_irc_channel(s):
         return s and s.startswith('#')
 
@@ -121,12 +116,12 @@ class IRCClient(asyncio.Protocol):
         try:
             return m.decode()
         except UnicodeDecodeError:
-            self.log('** Failed decode using utf-8, trying next encoding.')
+            log.warning('Failed decode using utf-8, trying next encoding.')
         try:
             return m.decode('iso-8859-1')
         except:
-            self.log('** Failed decode using iso-8859-1.')
-            self.log(repr(m))
+            log.exception('Failed decode using iso-8859-1.')
+            log.debug(repr(m))
             raise
 
     @staticmethod
@@ -143,47 +138,42 @@ class IRCClient(asyncio.Protocol):
         return False
 
     def add_admin(self, channel, nick):
-        if self.debug:
-            self.log('** Added {} to {} admins list'.format(nick, channel))
+        log.debug('Added {} to {} admins list'.format(nick, channel))
         self.admins[channel].add(nick)
         self.members[channel].add(nick)
 
     def remove_admin(self, channel, nick):
-        if self.debug:
-            self.log('** Removed {} from {} admins list'.format(nick, channel))
+        log.debug('Removed {} from {} admins list'.format(nick, channel))
         self.admins[channel].discard(nick)
 
     def add_member(self, channel, nick):
-        if self.debug:
-            self.log('** Added {} to {} members list'.format(nick, channel))
+        log.debug('Added {} to {} members list'.format(nick, channel))
         self.members[channel].add(nick)
 
     def remove_member(self, channel, nick):
-        if self.debug:
-            self.log('** Removed {} from {} members list'.format(nick, channel))
+        log.debug('Removed {} from {} members list'.format(nick, channel))
         self.members[channel].discard(nick)
         self.admins[channel].discard(nick)
 
     def connection_made(self, transport):
         self.t = transport
-        if self.debug:
-            self.log('** Connection made')
+        log.debug('Connection made')
         nick = self.c.get('irc:nick')
         if nick is None:
             self.c['irc:nick'] = 'humphrey'
-            self.log('** Edit {} and set {!r}'.format(self.c.path, 'irc:nick'))
+            log.warning('Edit {} and set {!r}'.format(self.c.path, 'irc:nick'))
             self.loop.stop()
         self.out('NICK {}'.format(nick))
         m = 'USER {} {} x :{}'
         ident = self.c.get('irc:ident')
         if ident is None:
             self.c['irc:ident'] = 'humphrey'
-            self.log('** Edit {} and set {!r}'.format(self.c.path, 'irc:ident'))
+            log.warning('Edit {} and set {!r}'.format(self.c.path, 'irc:ident'))
             self.loop.stop()
         name = self.c.get('irc:name')
         if name is None:
             self.c['irc:name'] = 'Humphrey'
-            self.log('** Edit {} and set {!r}'.format(self.c.path, 'irc:name'))
+            log.warning('Edit {} and set {!r}'.format(self.c.path, 'irc:name'))
             self.loop.stop()
         self.out(m.format(ident, self.c['irc:host'], name))
 
@@ -196,16 +186,13 @@ class IRCClient(asyncio.Protocol):
             self.loop.call_soon(self._in, line)
 
     def connection_lost(self, exc):
-        if self.debug:
-            self.log('** Connection lost')
+        log.debug('Connection lost')
         self.loop.stop()
 
     def _in(self, message):
-        # convert message from bytes to unicode
-        # then emit an appropriate event
+        # convert message from bytes to unicode then emit an appropriate event
         message = self.smart_decode(message)
-        if self.debug:
-            self.log('<= {}'.format(message))
+        log.debug('<= {}'.format(message))
         tokens = message.split()
         if len(tokens) > 0 and tokens[0] == 'PING':
             self.out('PONG {}'.format(tokens[1]))
@@ -234,11 +221,9 @@ class IRCClient(asyncio.Protocol):
             self.ee.emit('catch_all', message, self)
 
     def out(self, message):
-        # log messages then convert from unicode to bytes
-        # and write to transport
+        # log messages then convert from unicode to bytes and write to transport
         if message:
-            if self.debug:
-                self.log('=> {}'.format(message))
+            log.debug('=> {}'.format(message))
             self.t.write('{}\r\n'.format(message).encode())
 
     def send_action(self, target, message):
@@ -315,5 +300,4 @@ class IRCClient(asyncio.Protocol):
             channel = tokens[3]
         new_topic = message.split(' :', maxsplit=1)[1]
         self.topics[channel] = new_topic
-        if self.debug:
-            self.log('** Setting {} topic to {!r}'.format(channel, new_topic))
+        log.debug('Setting {} topic to {!r}'.format(channel, new_topic))
