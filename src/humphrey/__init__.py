@@ -3,6 +3,8 @@ import collections
 import json
 import logging
 
+__version__ = '0.5.0'
+
 log = logging.getLogger(__name__)
 
 

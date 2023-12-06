@@ -1,0 +1,31 @@
+[build-system]
+requires = [
+    "setuptools>=61.0.0",
+    "wheel>=0.37.0",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "humphrey"
+description = "An IRC client with no dependencies"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = [
+    "version",
+]
+
+[[project.authors]]
+name = "William Jackson"
+email = "william@subtlecoolness.com"
+
+[project.urls]
+"Homepage" = "https://github.com/williamjacksn/humphrey"
+"Bug Tracker" = "https://github.com/williamjacksn/humphrey/issues"
+
+[tool.setuptools.dynamic]
+version.attr = "humphrey.__version__"
