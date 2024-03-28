@@ -6,7 +6,7 @@
 #
 --extra-index-url https://alpine-wheels.github.io/index
 
-build==1.1.1
+build==1.2.1
     # via -r requirements.in
 packaging==24.0
     # via build
