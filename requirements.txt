@@ -4,8 +4,6 @@
 #
 #    pip-compile
 #
---extra-index-url https://alpine-wheels.github.io/index
-
 build==1.2.2.post1
     # via -r requirements.in
 packaging==24.1
