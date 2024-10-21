@@ -11,6 +11,15 @@ services:
       - ./:/home/python/humphrey
     working_dir: /home/python/humphrey
 
+  pip-compile:
+    entrypoint:
+      - /home/python/venv/bin/pip-compile
+    image: ghcr.io/williamjacksn/pip-tools:py3.12
+    init: true
+    volumes:
+      - ./:/home/python/humphrey
+    working_dir: /home/python/humphrey
+
   py-build:
     entrypoint:
       - /home/python/venv/bin/python
