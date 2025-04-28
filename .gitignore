@@ -1,8 +1,1 @@
-__pycache__
-.idea
-.vagrant
-*.json
-*.sqlite*
-build
-dist
 humphrey.egg-info
