@@ -3,7 +3,7 @@ import collections
 import json
 import logging
 
-__version__ = "2023.1"
+__version__ = "2025.0"
 
 log = logging.getLogger(__name__)
 
