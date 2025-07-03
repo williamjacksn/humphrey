@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humphrey"
+version = "2025.0"
 description = "An IRC client with no dependencies"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -12,7 +13,6 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version"]
 
 [[project.authors]]
 name = "William Jackson"
@@ -21,6 +21,3 @@ email = "william@subtlecoolness.com"
 [project.urls]
 "Homepage" = "https://github.com/williamjacksn/humphrey"
 "Issues" = "https://github.com/williamjacksn/humphrey/issues"
-
-[tool.setuptools.dynamic]
-version.attr = "humphrey.__version__"
