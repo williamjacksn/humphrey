@@ -4,6 +4,7 @@ import pathlib
 THIS_FILE = pathlib.PurePosixPath(
     pathlib.Path(__file__).relative_to(pathlib.Path().resolve())
 )
+ACTIONS_CHECKOUT = {"name": "Check out repository", "uses": "actions/checkout@v5"}
 
 
 def gen(content: dict, target: str):
@@ -48,8 +49,43 @@ def gen_publish_workflow():
                 },
                 "permissions": {"id-token": "write"},
                 "steps": [
-                    {"name": "Check out the repository", "uses": "actions/checkout@v4"},
+                    ACTIONS_CHECKOUT,
                     {"name": "Publish the package to PyPI", "run": "sh ci/publish.sh"},
+                ],
+            }
+        },
+    }
+    gen(content, target)
+
+
+def gen_ruff_workflow():
+    target = ".github/workflows/ruff.yaml"
+    content = {
+        "name": "Ruff",
+        "on": {
+            "pull_request": {"branches": ["master"]},
+            "push": {"branches": ["master"]},
+        },
+        "permissions": {"contents": "read"},
+        "env": {
+            "description": f"This workflow ({target}) was generated from {THIS_FILE}",
+        },
+        "jobs": {
+            "ruff": {
+                "name": "Run ruff linting and formatting checks",
+                "runs-on": "ubuntu-latest",
+                "steps": [
+                    ACTIONS_CHECKOUT,
+                    {
+                        "name": "Run ruff check",
+                        "uses": "astral-sh/ruff-action@v3",
+                        "with": {"args": "check --output-format=github"},
+                    },
+                    {
+                        "name": "Run ruff format",
+                        "uses": "astral-sh/ruff-action@v3",
+                        "with": {"args": "format --check"},
+                    },
                 ],
             }
         },
@@ -60,6 +96,7 @@ def gen_publish_workflow():
 def main():
     gen_dependabot()
     gen_publish_workflow()
+    gen_ruff_workflow()
 
 
 if __name__ == "__main__":
