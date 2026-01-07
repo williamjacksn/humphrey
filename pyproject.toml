@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv-build>=0.9.14,<0.10.0"]
+requires = ["uv-build>=0.9.22,<0.10.0"]
 
 [project]
 name = "humphrey"
@@ -24,7 +24,7 @@ email = "william@subtlecoolness.com"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.14.7",
-    "ty>=0.0.1a29",
-    "uv-build>=0.9.14",
+    "ruff>=0.14.10",
+    "ty>=0.0.9",
+    "uv-build>=0.9.22",
 ]
