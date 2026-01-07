@@ -128,8 +128,8 @@ class IRCClient(asyncio.Protocol):
     @staticmethod
     def parse_hostmask(hostmask):
         # 'nick!user@host' => ('nick', 'user', 'host')
-        nick, _, userhost = hostmask.partition("!")
-        user, _, host = userhost.partition("@")
+        nick, _, user_host = hostmask.partition("!")
+        user, _, host = user_host.partition("@")
         return nick, user, host
 
     def is_admin(self, nick):
@@ -191,7 +191,7 @@ class IRCClient(asyncio.Protocol):
         self.loop.stop()
 
     def _in(self, message):
-        # convert message from bytes to unicode then emit an appropriate event
+        # convert message from bytes to str then emit an appropriate event
         message = self.smart_decode(message)
         log.debug("<= {}".format(message))
         tokens = message.split()
@@ -222,7 +222,7 @@ class IRCClient(asyncio.Protocol):
             self.ee.emit("catch_all", message, self)
 
     def out(self, message):
-        # log messages then convert from unicode to bytes and write to transport
+        # log messages, then convert from str to bytes and write to transport
         if message:
             log.debug("=> {}".format(message))
             self.t.write("{}\r\n".format(message).encode())
@@ -246,9 +246,9 @@ class IRCClient(asyncio.Protocol):
         target = tokens[2]
         if self.is_irc_channel(target):
             modes = []
-            modespec = tokens[3]
+            mode_spec = tokens[3]
             mode_action = ""
-            for char in modespec:
+            for char in mode_spec:
                 if char in ["+", "-"]:
                     mode_action = char
                 else:
