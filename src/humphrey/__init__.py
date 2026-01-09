@@ -9,7 +9,7 @@ from typing import Any
 log = logging.getLogger(__name__)
 
 
-class EventEmitter(object):
+class EventEmitter:
     def __init__(self) -> None:
         self._events = collections.defaultdict(list)
 
