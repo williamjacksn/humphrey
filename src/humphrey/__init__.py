@@ -139,20 +139,20 @@ class IRCClient(asyncio.Protocol):
         return False
 
     def add_admin(self, channel, nick):
-        log.debug("Added {} to {} admins list".format(nick, channel))
+        log.debug(f"Added {nick} to {channel} admins list")
         self.admins[channel].add(nick)
         self.members[channel].add(nick)
 
     def remove_admin(self, channel, nick):
-        log.debug("Removed {} from {} admins list".format(nick, channel))
+        log.debug(f"Removed {nick} from {channel} admins list")
         self.admins[channel].discard(nick)
 
     def add_member(self, channel, nick):
-        log.debug("Added {} to {} members list".format(nick, channel))
+        log.debug(f"Added {nick} to {channel} members list")
         self.members[channel].add(nick)
 
     def remove_member(self, channel, nick):
-        log.debug("Removed {} from {} members list".format(nick, channel))
+        log.debug(f"Removed {nick} from {channel} members list")
         self.members[channel].discard(nick)
         self.admins[channel].discard(nick)
 
@@ -164,7 +164,7 @@ class IRCClient(asyncio.Protocol):
             self.c["irc:nick"] = "humphrey"
             log.warning("Edit {} and set {!r}".format(self.c.path, "irc:nick"))
             self.loop.stop()
-        self.out("NICK {}".format(nick))
+        self.out(f"NICK {nick}")
         m = "USER {} {} x :{}"
         ident = self.c.get("irc:ident")
         if ident is None:
@@ -193,10 +193,10 @@ class IRCClient(asyncio.Protocol):
     def _in(self, message):
         # convert message from bytes to str then emit an appropriate event
         message = self.smart_decode(message)
-        log.debug("<= {}".format(message))
+        log.debug(f"<= {message}")
         tokens = message.split()
         if len(tokens) > 0 and tokens[0] == "PING":
-            self.out("PONG {}".format(tokens[1]))
+            self.out(f"PONG {tokens[1]}")
             self.ee.emit(tokens[0], message, self)
         elif len(tokens) > 3 and tokens[3] == ":\x01ACTION":
             self.ee.emit("ACTION", message, self)
@@ -224,17 +224,17 @@ class IRCClient(asyncio.Protocol):
     def out(self, message):
         # log messages, then convert from str to bytes and write to transport
         if message:
-            log.debug("=> {}".format(message))
-            self.t.write("{}\r\n".format(message).encode())
+            log.debug(f"=> {message}")
+            self.t.write(f"{message}\r\n".encode())
 
     def send_action(self, target, message):
-        self.out("PRIVMSG {} :\x01ACTION {}\x01".format(target, message))
+        self.out(f"PRIVMSG {target} :\x01ACTION {message}\x01")
 
     def send_privmsg(self, target, message):
-        self.out("PRIVMSG {} :{}".format(target, message))
+        self.out(f"PRIVMSG {target} :{message}")
 
     def send_topic(self, target, topic):
-        self.out("TOPIC {} :{}".format(target, topic))
+        self.out(f"TOPIC {target} :{topic}")
 
     def _handle_join(self, tokens):
         source = tokens[0].lstrip(":")
@@ -301,4 +301,4 @@ class IRCClient(asyncio.Protocol):
             channel = tokens[3]
         new_topic = message.split(" :", maxsplit=1)[1]
         self.topics[channel] = new_topic
-        log.debug("Setting {} topic to {!r}".format(channel, new_topic))
+        log.debug(f"Setting {channel} topic to {new_topic!r}")
