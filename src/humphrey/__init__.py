@@ -22,7 +22,7 @@ class EventEmitter(object):
             return _on
         return _on(func)
 
-    def emit(self, event: str, *args, **kwargs) -> bool:
+    def emit(self, event: str, *args, **kwargs) -> bool:  # noqa: ANN002, ANN003
         handled = False
         for f in self._events[event]:
             f(*args, **kwargs)
@@ -45,10 +45,10 @@ class Config:
     def __contains__(self, item: str) -> bool:
         return item in self.data
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401
         return self.data[key]
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:  # noqa: ANN401
         self.data[key] = value
         self._flush()
 
@@ -59,7 +59,7 @@ class Config:
             else:
                 json.dump(self.data, f)
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: Any = None) -> Any:  # noqa: ANN401
         return self.data.get(key, default)
 
     def keys(self) -> KeysView:
@@ -70,7 +70,7 @@ class Config:
             del self.data[key]
             self._flush()
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: Any) -> None:  # noqa: ANN401
         self[key] = value
 
 
