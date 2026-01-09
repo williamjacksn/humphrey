@@ -3,6 +3,7 @@ import collections
 import json
 import logging
 import pathlib
+import secrets
 from collections.abc import Callable, KeysView
 from typing import Any
 
@@ -83,6 +84,29 @@ class IRCClient(asyncio.Protocol):
         self.buf: bytes = b""
         self.ee = EventEmitter()
         self.c = Config(config_path)
+
+        if "irc:host" not in self.c:
+            self.c["irc:host"] = "irc.synirc.net"
+            log.warning(
+                f"irc:host not configured in {self.c.path}, using irc.synirc.net"
+            )
+        if "irc:port" not in self.c:
+            self.c["irc:port"] = 6660
+            log.warning(f"irc:port not configured in {self.c.path}, using 6660")
+        if "irc:nick" not in self.c:
+            nick = f"humphrey-{secrets.token_hex(2)}"
+            self.c["irc:nick"] = nick
+            log.warning(f"irc:nick not configured in {self.c.path}, using {nick}")
+        if "irc:ident" not in self.c:
+            self.c["irc:ident"] = "humphrey"
+            log.warning(f"irc:ident not configured in {self.c.path}, using humphrey")
+        if "irc:channel" not in self.c:
+            self.c["irc:channel"] = "#humphrey"
+            log.warning(f"irc:channel not configured in {self.c.path}, using #humphrey")
+        if "irc:name" not in self.c:
+            self.c["irc:name"] = "Humphrey"
+            log.warning(f"irc:name not configured in {self.c.path}, using Humphrey")
+
         self.loop = asyncio.get_event_loop()
         self.debug = False
         self.admins = collections.defaultdict(set)
@@ -168,27 +192,14 @@ class IRCClient(asyncio.Protocol):
         else:
             log.critical("Something went wrong with the connection")
         log.debug("Connection made")
-        nick = self.c.get("irc:nick")
-        if nick is None:
-            self.c["irc:nick"] = "humphrey"
-            log.warning("Edit {} and set {!r}".format(self.c.path, "irc:nick"))
-            self.loop.stop()
-            return
+
+        nick: str = self.c["irc:nick"]
         self.out(f"NICK {nick}")
-        m = "USER {} {} x :{}"
-        ident = self.c.get("irc:ident")
-        if ident is None:
-            self.c["irc:ident"] = "humphrey"
-            log.warning("Edit {} and set {!r}".format(self.c.path, "irc:ident"))
-            self.loop.stop()
-            return
-        name = self.c.get("irc:name")
-        if name is None:
-            self.c["irc:name"] = "Humphrey"
-            log.warning("Edit {} and set {!r}".format(self.c.path, "irc:name"))
-            self.loop.stop()
-            return
-        self.out(m.format(ident, self.c["irc:host"], name))
+
+        ident: str = self.c["irc:ident"]
+        name: str = self.c["irc:name"]
+        host: str = self.c["irc:host"]
+        self.out(f"USER {ident} {host} x :{name}")
 
     def data_received(self, data: bytes) -> None:
         self.buf = self.buf + data
