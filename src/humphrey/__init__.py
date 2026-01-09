@@ -107,7 +107,6 @@ class IRCClient(asyncio.Protocol):
             self.c["irc:name"] = "Humphrey"
             log.warning(f"irc:name not configured in {self.c.path}, using Humphrey")
 
-        self.loop = asyncio.get_event_loop()
         self.debug = False
         self.admins = collections.defaultdict(set)
         self.members = collections.defaultdict(set)
@@ -207,11 +206,11 @@ class IRCClient(asyncio.Protocol):
         self.buf = lines.pop()
         for line in lines:
             line = line.strip()
-            self.loop.call_soon(self._in, line)
+            asyncio.get_running_loop().call_soon(self._in, line)
 
     def connection_lost(self, exc: Exception | None) -> None:
         log.debug("Connection lost")
-        self.loop.stop()
+        asyncio.get_running_loop().stop()
 
     def _in(self, m: bytes) -> None:
         # convert message from bytes to str then emit an appropriate event
