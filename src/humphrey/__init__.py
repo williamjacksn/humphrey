@@ -193,9 +193,9 @@ class IRCClient(asyncio.Protocol):
         log.debug("Connection lost")
         self.loop.stop()
 
-    def _in(self, message: bytes) -> None:
+    def _in(self, m: bytes) -> None:
         # convert message from bytes to str then emit an appropriate event
-        message = self.smart_decode(message)
+        message = self.smart_decode(m)
         log.debug(f"<= {message}")
         tokens = message.split()
         if len(tokens) > 0 and tokens[0] == "PING":
