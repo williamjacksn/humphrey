@@ -76,7 +76,7 @@ class Config:
 
 class IRCClient(asyncio.Protocol):
     def __init__(self, config_path: pathlib.Path) -> None:
-        self.buf = b""
+        self.buf: bytes = b""
         self.ee = EventEmitter()
         self.c = Config(config_path)
         self.loop = asyncio.get_event_loop()
