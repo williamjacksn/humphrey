@@ -41,6 +41,8 @@ class Config:
         if self.path.exists():
             with self.path.open() as f:
                 self.data = json.load(f)
+        else:
+            self._flush()
 
     def __contains__(self, item: str) -> bool:
         return item in self.data
@@ -75,12 +77,13 @@ class Config:
 
 
 class IRCClient(asyncio.Protocol):
+    t: asyncio.Transport
+
     def __init__(self, config_path: pathlib.Path) -> None:
         self.buf: bytes = b""
         self.ee = EventEmitter()
         self.c = Config(config_path)
         self.loop = asyncio.get_event_loop()
-        self.t = None
         self.debug = False
         self.admins = collections.defaultdict(set)
         self.members = collections.defaultdict(set)
@@ -159,14 +162,18 @@ class IRCClient(asyncio.Protocol):
         self.members[channel].discard(nick)
         self.admins[channel].discard(nick)
 
-    def connection_made(self, transport: asyncio.Transport) -> None:
-        self.t = transport
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
+        if isinstance(transport, asyncio.Transport):
+            self.t = transport
+        else:
+            log.critical("Something went wrong with the connection")
         log.debug("Connection made")
         nick = self.c.get("irc:nick")
         if nick is None:
             self.c["irc:nick"] = "humphrey"
             log.warning("Edit {} and set {!r}".format(self.c.path, "irc:nick"))
             self.loop.stop()
+            return
         self.out(f"NICK {nick}")
         m = "USER {} {} x :{}"
         ident = self.c.get("irc:ident")
@@ -174,11 +181,13 @@ class IRCClient(asyncio.Protocol):
             self.c["irc:ident"] = "humphrey"
             log.warning("Edit {} and set {!r}".format(self.c.path, "irc:ident"))
             self.loop.stop()
+            return
         name = self.c.get("irc:name")
         if name is None:
             self.c["irc:name"] = "Humphrey"
             log.warning("Edit {} and set {!r}".format(self.c.path, "irc:name"))
             self.loop.stop()
+            return
         self.out(m.format(ident, self.c["irc:host"], name))
 
     def data_received(self, data: bytes) -> None:
