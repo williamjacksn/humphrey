@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import asyncio
-import humphrey
 import pathlib
+
+import humphrey
 
 
 def main():
@@ -12,7 +13,7 @@ def main():
     irc.debug = True
 
     @irc.ee.on("376")
-    def on_rpl_endofmotd(_, bot):
+    def on_rpl_endofmotd(_: str, bot: humphrey.IRCClient):
         bot.out("JOIN {}".format(bot.c.get("irc:channel")))
 
     loop = asyncio.get_event_loop()
