@@ -3,18 +3,18 @@ import collections
 import json
 import logging
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, KeysView
 from typing import Any
 
 log = logging.getLogger(__name__)
 
 
 class EventEmitter(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._events = collections.defaultdict(list)
 
-    def on(self, event: str, func: Callable | None = None):
-        def _on(f: Callable):
+    def on(self, event: str, func: Callable | None = None) -> Callable:
+        def _on(f: Callable) -> Callable:
             self._events[event].append(f)
             return f
 
@@ -22,7 +22,7 @@ class EventEmitter(object):
             return _on
         return _on(func)
 
-    def emit(self, event: str, *args, **kwargs):
+    def emit(self, event: str, *args, **kwargs) -> bool:
         handled = False
         for f in self._events[event]:
             f(*args, **kwargs)
@@ -34,7 +34,7 @@ class EventEmitter(object):
 
 
 class Config:
-    def __init__(self, path: pathlib.Path, pretty: bool = False):
+    def __init__(self, path: pathlib.Path, pretty: bool = False) -> None:
         self.data = {}
         self.path = path
         self.pretty = pretty
@@ -42,40 +42,40 @@ class Config:
             with self.path.open() as f:
                 self.data = json.load(f)
 
-    def __contains__(self, item: str):
+    def __contains__(self, item: str) -> bool:
         return item in self.data
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         return self.data[key]
 
-    def __setitem__(self, key: str, value: Any):
+    def __setitem__(self, key: str, value: Any) -> None:
         self.data[key] = value
         self._flush()
 
-    def _flush(self):
+    def _flush(self) -> None:
         with self.path.open("w") as f:
             if self.pretty:
                 json.dump(self.data, f, indent=2, sort_keys=True)
             else:
                 json.dump(self.data, f)
 
-    def get(self, key: str, default: Any = None):
+    def get(self, key: str, default: Any = None) -> Any:
         return self.data.get(key, default)
 
-    def keys(self):
+    def keys(self) -> KeysView:
         return self.data.keys()
 
-    def remove(self, key: str):
+    def remove(self, key: str) -> None:
         if key in self.data:
             del self.data[key]
             self._flush()
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         self[key] = value
 
 
 class IRCClient(asyncio.Protocol):
-    def __init__(self, config_path: pathlib.Path):
+    def __init__(self, config_path: pathlib.Path) -> None:
         self.buf = b""
         self.ee = EventEmitter()
         self.c = Config(config_path)
@@ -87,15 +87,15 @@ class IRCClient(asyncio.Protocol):
         self.in_channel = False
         self.topics = {}
 
-    def __call__(self):
+    def __call__(self) -> "IRCClient":
         return self
 
     @staticmethod
-    def is_irc_channel(s: str):
-        return s and s.startswith("#")
+    def is_irc_channel(s: str) -> bool:
+        return bool(s) and s.startswith("#")
 
     @staticmethod
-    def remove_format_codes(m: bytes):
+    def remove_format_codes(m: bytes) -> bytes:
         m = m.replace(b"\x02", b"")  # bold
         m = m.replace(b"\x0f", b"")  # normal
         m = m.replace(b"\x16", b"")  # italic/reversed
@@ -115,7 +115,7 @@ class IRCClient(asyncio.Protocol):
             m = m.replace(m[idx:mark], b"")
         return m
 
-    def smart_decode(self, m: bytes):
+    def smart_decode(self, m: bytes) -> str:
         m = self.remove_format_codes(m)
         try:
             return m.decode()
@@ -129,37 +129,37 @@ class IRCClient(asyncio.Protocol):
             raise
 
     @staticmethod
-    def parse_hostmask(hostmask: str):
+    def parse_hostmask(hostmask: str) -> tuple[str, str, str]:
         # 'nick!user@host' => ('nick', 'user', 'host')
         nick, _, user_host = hostmask.partition("!")
         user, _, host = user_host.partition("@")
         return nick, user, host
 
-    def is_admin(self, nick: str):
+    def is_admin(self, nick: str) -> bool:
         for channel, admins in self.admins.items():
             if nick in admins:
                 return True
         return False
 
-    def add_admin(self, channel: str, nick: str):
+    def add_admin(self, channel: str, nick: str) -> None:
         log.debug(f"Added {nick} to {channel} admins list")
         self.admins[channel].add(nick)
         self.members[channel].add(nick)
 
-    def remove_admin(self, channel: str, nick: str):
+    def remove_admin(self, channel: str, nick: str) -> None:
         log.debug(f"Removed {nick} from {channel} admins list")
         self.admins[channel].discard(nick)
 
-    def add_member(self, channel: str, nick: str):
+    def add_member(self, channel: str, nick: str) -> None:
         log.debug(f"Added {nick} to {channel} members list")
         self.members[channel].add(nick)
 
-    def remove_member(self, channel: str, nick: str):
+    def remove_member(self, channel: str, nick: str) -> None:
         log.debug(f"Removed {nick} from {channel} members list")
         self.members[channel].discard(nick)
         self.admins[channel].discard(nick)
 
-    def connection_made(self, transport: asyncio.Transport):
+    def connection_made(self, transport: asyncio.Transport) -> None:
         self.t = transport
         log.debug("Connection made")
         nick = self.c.get("irc:nick")
@@ -181,7 +181,7 @@ class IRCClient(asyncio.Protocol):
             self.loop.stop()
         self.out(m.format(ident, self.c["irc:host"], name))
 
-    def data_received(self, data: bytes):
+    def data_received(self, data: bytes) -> None:
         self.buf = self.buf + data
         lines = self.buf.split(b"\n")
         self.buf = lines.pop()
@@ -189,11 +189,11 @@ class IRCClient(asyncio.Protocol):
             line = line.strip()
             self.loop.call_soon(self._in, line)
 
-    def connection_lost(self, exc: Exception | None):
+    def connection_lost(self, exc: Exception | None) -> None:
         log.debug("Connection lost")
         self.loop.stop()
 
-    def _in(self, message: bytes):
+    def _in(self, message: bytes) -> None:
         # convert message from bytes to str then emit an appropriate event
         message = self.smart_decode(message)
         log.debug(f"<= {message}")
@@ -224,28 +224,28 @@ class IRCClient(asyncio.Protocol):
         else:
             self.ee.emit("catch_all", message, self)
 
-    def out(self, message: str):
+    def out(self, message: str) -> None:
         # log messages, then convert from str to bytes and write to transport
         if message:
             log.debug(f"=> {message}")
             self.t.write(f"{message}\r\n".encode())
 
-    def send_action(self, target: str, message: str):
+    def send_action(self, target: str, message: str) -> None:
         self.out(f"PRIVMSG {target} :\x01ACTION {message}\x01")
 
-    def send_privmsg(self, target: str, message: str):
+    def send_privmsg(self, target: str, message: str) -> None:
         self.out(f"PRIVMSG {target} :{message}")
 
-    def send_topic(self, target: str, topic: str):
+    def send_topic(self, target: str, topic: str) -> None:
         self.out(f"TOPIC {target} :{topic}")
 
-    def _handle_join(self, tokens: list[str]):
+    def _handle_join(self, tokens: list[str]) -> None:
         source = tokens[0].lstrip(":")
         nick, _, _ = self.parse_hostmask(source)
         channel = tokens[2].lstrip(":")
         self.add_member(channel, nick)
 
-    def _handle_mode(self, tokens: list[str]):
+    def _handle_mode(self, tokens: list[str]) -> None:
         target = tokens[2]
         if self.is_irc_channel(target):
             modes = []
@@ -262,7 +262,7 @@ class IRCClient(asyncio.Protocol):
                 elif mode in ["-h", "-o"]:
                     self.remove_admin(target, nick)
 
-    def _handle_namreply(self, tokens: list[str]):
+    def _handle_namreply(self, tokens: list[str]) -> None:
         channel = tokens[4]
         for name in tokens[5:]:
             name = name.lstrip(":")
@@ -271,7 +271,7 @@ class IRCClient(asyncio.Protocol):
             if name.startswith(("~", "@", "%")):
                 self.add_admin(channel, nick)
 
-    def _handle_nick(self, tokens: list[str]):
+    def _handle_nick(self, tokens: list[str]) -> None:
         source = tokens[0].lstrip(":")
         nick, _, _ = self.parse_hostmask(source)
         new_nick = tokens[2].lstrip(":")
@@ -284,19 +284,19 @@ class IRCClient(asyncio.Protocol):
                 self.add_member(channel, new_nick)
                 self.remove_member(channel, nick)
 
-    def _handle_part(self, tokens: list[str]):
+    def _handle_part(self, tokens: list[str]) -> None:
         source = tokens[0].lstrip(":")
         nick, _, _ = self.parse_hostmask(source)
         channel = tokens[2]
         self.remove_member(channel, nick)
 
-    def _handle_quit(self, tokens: list[str]):
+    def _handle_quit(self, tokens: list[str]) -> None:
         source = tokens[0].lstrip(":")
         nick, _, _ = self.parse_hostmask(source)
         for channel, _ in self.members.items():
             self.remove_member(channel, nick)
 
-    def _handle_topic(self, message: str):
+    def _handle_topic(self, message: str) -> None:
         tokens = message.split()
         if tokens[1] == "TOPIC":
             channel = tokens[2]

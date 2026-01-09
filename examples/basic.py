@@ -6,14 +6,14 @@ import pathlib
 import humphrey
 
 
-def main():
+def main() -> None:
     config_file = pathlib.Path(__file__).resolve().with_name("basic.json")
     irc = humphrey.IRCClient(config_file)
     irc.c.pretty = True
     irc.debug = True
 
     @irc.ee.on("376")
-    def on_rpl_endofmotd(_: str, bot: humphrey.IRCClient):
+    def on_rpl_endofmotd(_: str, bot: humphrey.IRCClient) -> None:
         bot.out("JOIN {}".format(bot.c.get("irc:channel")))
 
     loop = asyncio.get_event_loop()
