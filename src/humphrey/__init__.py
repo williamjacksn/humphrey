@@ -136,7 +136,7 @@ class IRCClient(asyncio.Protocol):
         return nick, user, host
 
     def is_admin(self, nick: str) -> bool:
-        for channel, admins in self.admins.items():
+        for admins in self.admins.values():
             if nick in admins:
                 return True
         return False
@@ -293,7 +293,7 @@ class IRCClient(asyncio.Protocol):
     def _handle_quit(self, tokens: list[str]) -> None:
         source = tokens[0].lstrip(":")
         nick, _, _ = self.parse_hostmask(source)
-        for channel, _ in self.members.items():
+        for channel in self.members.keys():
             self.remove_member(channel, nick)
 
     def _handle_topic(self, message: str) -> None:
