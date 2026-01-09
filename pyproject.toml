@@ -4,7 +4,7 @@ requires = ["uv-build>=0.9.22,<0.10.0"]
 
 [project]
 name = "humphrey"
-version = "2025.0"
+version = "2026.0"
 description = "An IRC client with no dependencies"
 readme = "README.md"
 requires-python = ">=3.10"
