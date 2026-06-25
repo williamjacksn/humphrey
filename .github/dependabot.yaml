@@ -5,8 +5,6 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: uv
-    allow:
-      - dependency-type: all
     directory: /
     schedule:
       interval: weekly
