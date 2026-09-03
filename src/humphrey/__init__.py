@@ -312,7 +312,7 @@ class IRCClient(asyncio.Protocol):
     def _handle_quit(self, tokens: list[str]) -> None:
         source = tokens[0].lstrip(":")
         nick, _, _ = self.parse_hostmask(source)
-        for channel in self.members.keys():
+        for channel in self.members:
             self.remove_member(channel, nick)
 
     def _handle_topic(self, message: str) -> None:

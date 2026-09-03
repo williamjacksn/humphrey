@@ -1,7 +1,3 @@
-[build-system]
-build-backend = "uv_build"
-requires = ["uv-build>=0.9.22,<0.13.0"]
-
 [project]
 name = "humphrey"
 version = "2026.0"
@@ -22,12 +18,16 @@ email = "william@subtlecoolness.com"
 "Homepage" = "https://github.com/williamjacksn/humphrey"
 "Issues" = "https://github.com/williamjacksn/humphrey/issues"
 
+[build-system]
+build-backend = "uv_build"
+requires = ["uv-build>=0.9.22,<0.13.0"]
+
 [dependency-groups]
 dev = [
-    "ruff>=0.14.11",
+    "ruff>=0.16.5",
     "ty>=0.0.10",
     "uv-build>=0.9.22",
 ]
 
 [tool.ruff.lint]
-select = ["ANN", "E", "F", "FURB", "I", "PERF", "RUF", "S", "UP"]
+extend-select = ["ANN", "E", "F", "FURB", "I", "PERF", "Q", "RSE", "RUF", "S", "UP"]
